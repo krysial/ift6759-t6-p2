@@ -1,0 +1,6 @@
+{
+  "lr": 0.001,
+  "model": "baseline",
+  "batch_size": 128,
+  "epochs": 5
+}
