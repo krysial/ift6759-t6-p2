@@ -2,7 +2,7 @@ import argparse
 import os
 import json
 
-from src.main import Application
+# from src.main import Application
 
 PATH_DATA = 'data'
 OPTIONS_CONF_FILE = os.path.join(PATH_DATA, 'config.json')
@@ -20,8 +20,8 @@ def main(args):
             options = json.load(f)
 
     options.update(args)
-    app = Application(options)
-    app.train()
+    # app = Application(options)
+    # app.train()
 
 
 if __name__ == '__main__':
