@@ -19,9 +19,7 @@ def get_vocabulary(data_path, vocab_size=None, add_start_end=True, remove_punctu
     """
 
     # Symbols to be removed, from punctuation_remover.py
-    PUNCTUATION = {",", ";", ":", "!", "?", ".", "'", '"', "(", ")", "...", "[", "]", "{", "}"}
-    # Add apostrophe
-    PUNCTUATION.add("’")
+    PUNCTUATION = {",", ";", ":", "!", "?", ".", "'", '"', "(", ")", "...", "[", "]", "{", "}", "’"}
 
     # Read lines from file, strip newline, and add <SOS> / <EOS>
     with open(data_path) as f:
