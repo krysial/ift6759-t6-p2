@@ -5,12 +5,12 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-def processing(data_path, max_seq=None, vocab_size=None, add_start=True, add_end=True, remove_punctuation=True, tokenize_type="w", padding='post'):
+def processing(data, max_seq=None, vocab_size=None, add_start=True, add_end=True, remove_punctuation=True, tokenize_type="w", padding='post'):
     """
     Gets tokenized and integer encoded format of given text corpus.
 
     Arguments:
-        data_path: string. Path of input text file.
+        data: string or list. Path of input text file when string and data (batch of sentences expected) itself when List(list).
         max_seq: int or Nonr, default None. Sequence length to retain.
         vocab_size: int or None, default None. Number of words to retain, sorted by most common. If None, retain all words.
         add_start: boolean, default True. If True, adds start-of-sequence (<SOS>) 
@@ -27,9 +27,13 @@ def processing(data_path, max_seq=None, vocab_size=None, add_start=True, add_end
     # Symbols to be removed, from punctuation_remover.py
     PUNCTUATION = {",", ";", ":", "!", "?", ".", "'", '"', "(", ")", "...", "[", "]", "{", "}", "’"}
 
-    # Read lines from file
-    with open(data_path) as f:
-        lines = f.readlines()
+
+    if isinstance(data, str):
+        # Read lines from file
+        with open(data) as f:
+            lines = f.readlines()
+    elif isinstance(data, list):
+        lines = data
     
     # Strip newline
     lines = [line.strip() for line in lines]
