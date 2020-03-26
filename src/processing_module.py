@@ -3,7 +3,7 @@ from collections import Counter
 import pandas as pd
 
 
-def get_vocabulary(data_path, vocab_size=None, add_start_end=True, remove_punctuation=True):
+def get_vocabulary(data_path, vocab_size=None, add_start=True, add_end=True, remove_punctuation=True):
     """
     Gets the samples and the vocabulary of a text file, with word counts.
 
@@ -24,10 +24,13 @@ def get_vocabulary(data_path, vocab_size=None, add_start_end=True, remove_punctu
     # Read lines from file, strip newline, and add <SOS> / <EOS>
     with open(data_path) as f:
         lines = f.readlines()
-        if add_start_end:
-            lines = ['<SOS> ' + line.strip() + ' <EOS>' for line in lines]
-        else:
-            lines = [line.strip() for line in lines]
+        lines = [line.strip() for line in lines]
+
+        if add_start:
+            lines = ['<SOS> ' + line for line in lines]
+
+        if add_end:
+            lines = [line + ' <EOS>' for line in lines]
     
     # Remove punctuation
     if remove_punctuation:
