@@ -21,21 +21,24 @@ def get_vocabulary(data_path, vocab_size=None, add_start=True, add_end=True, rem
     # Symbols to be removed, from punctuation_remover.py
     PUNCTUATION = {",", ";", ":", "!", "?", ".", "'", '"', "(", ")", "...", "[", "]", "{", "}", "’"}
 
-    # Read lines from file, strip newline, and add <SOS> / <EOS>
+    # Read lines from file
     with open(data_path) as f:
         lines = f.readlines()
-        lines = [line.strip() for line in lines]
-
-        if add_start:
-            lines = ['<SOS> ' + line for line in lines]
-
-        if add_end:
-            lines = [line + ' <EOS>' for line in lines]
     
+    # Strip newline
+    lines = [line.strip() for line in lines]
+
     # Remove punctuation
     if remove_punctuation:
         split_lines = [[x for x in line.split() if x not in PUNCTUATION] for line in lines]
         lines = [' '.join(line) for line in split_lines]
+
+    # Add <SOS> / <EOS>
+    if add_start:
+        lines = ['<SOS> ' + line for line in lines]
+
+    if add_end:
+        lines = [line + ' <EOS>' for line in lines]
 
     # Get list of words
     corpus = ' '.join(lines).split()
