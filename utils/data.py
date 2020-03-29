@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-def processing(data, max_seq=None, vocab_size=None, add_start=True, add_end=True, remove_punctuation=True, tokenize_type="w", padding='post'):
+
+def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
+               add_end=True, remove_punctuation=True, tokenize_type="w",
+               padding='post'):
     """
     Gets tokenized and integer encoded format of given text corpus.
 
@@ -34,7 +37,7 @@ def processing(data, max_seq=None, vocab_size=None, add_start=True, add_end=True
             lines = f.readlines()
     elif isinstance(data, list):
         lines = data
-    
+
     # Strip newline
     lines = [line.strip() for line in lines]
 
@@ -67,7 +70,7 @@ def processing(data, max_seq=None, vocab_size=None, add_start=True, add_end=True
         lines = [line + ['<EOS>'] for line in lines]
 
     # Encode text data using v2id
-    encoded_lines = [list(map(v2id.get,line)) for line in tqdm(lines)]
+    encoded_lines = [list(map(v2id.get, line)) for line in tqdm(lines)]
     if padding == 'pre':
         padder = '<SOS>'
     elif padding == 'post':
