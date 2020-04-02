@@ -1,0 +1,22 @@
+{
+    "unformated_en_w2w": {
+        "max_seq": null,
+        "vocab_size": null,
+        "remove_punctuation": true 
+    },
+    "unformated_fr_w2w": {
+        "max_seq": null,
+        "vocab_size": null,
+        "remove_punctuation": true 
+    },
+    "unformated_fr_c2c": {
+        "max_seq": null,
+        "vocab_size": null,
+        "remove_punctuation": true 
+    },
+    "formated_fr_c2c": {
+        "max_seq": null,
+        "vocab_size": null,
+        "remove_punctuation": false 
+    }
+}
