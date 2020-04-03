@@ -26,21 +26,18 @@ try:
 except ValueError:
     pass
 
-BATCH_SIZE = 64
-epoch = 20
-steps_per_epoch = 500
-
 
 @click.command()
 @click.option('--task', default='unformated_fr_w2w')
 @click.option('--config_path', default='config/language_models.json')
-def train(task, config_path):
+@click.option('--batch_size', default=64)
+@click.option('--epochs', default=20)
+@click.option('--steps_per_epoch', default=500)
+@click.option('--model_name', default='GRU')
+def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
     with open(config_path, "r") as fd:
         config = json.load(fd)
 
-    max_seq = config[task]['max_seq']
-    vocab_size = config[task]['vocab_size']
-    remove_punctuation = config[task]['remove_punctuation']
     data_file = "data/unaligned_" + task.split("_")[0] + "_" + \
         task.split("_")[1]
     tokenize_type = list(task)[-1]
@@ -48,14 +45,14 @@ def train(task, config_path):
     print("data_file:{}, tokenize_type:{}, rm_punc:{}".format(
         data_file,
         tokenize_type,
-        remove_punctuation))
+        config[task]['remove_punctuation']))
 
     # Directory where the checkpoints will be saved
     checkpoint_dir = 'language_models/' + task
     checkpoint_prefix = os.path.join(
         os.getcwd(),
         checkpoint_dir,
-        "GRU_{epoch}.h5"
+        model_name + "_{epoch}.h5"
     )
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                         filepath=checkpoint_prefix,
@@ -65,10 +62,15 @@ def train(task, config_path):
     id2v, v2id, train_dataset = preprocessing(
         os.path.join(os.getcwd(), data_file),
         tokenize_type=tokenize_type,
-        max_seq=max_seq,
-        vocab_size=vocab_size,
-        remove_punctuation=remove_punctuation
+        max_seq=config[task]['max_seq'],
+        vocab_size=config[task]['vocab_size'],
+        remove_punctuation=config[task]['remove_punctuation'],
+        save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
+                                    "v2id.json")
     )
+
+    config[task]['vocab_size'] = len(id2v)
+    config[task]['max_seq'] = train_dataset.shape[1]
 
     def split_input_target(chunk):
         input_text = chunk[:-1]
@@ -78,32 +80,31 @@ def train(task, config_path):
     train_dataset = tf.data.Dataset.from_tensor_slices(train_dataset)
     train_dataset = train_dataset.map(split_input_target)
     train_dataset = train_dataset.shuffle(1000).batch(
-        BATCH_SIZE,
-        drop_remainder=True
-    ).repeat()
-
-    def loss(labels, logits):
-        return tf.keras.losses.sparse_categorical_crossentropy(
-            labels,
-            logits,
-            from_logits=True
-        )
+                        batch_size,
+                        drop_remainder=True
+                    ).repeat()
 
     # creating the model in the TPUStrategy scope means we will
     # train the model on the TPU
     with tpu_strategy.scope():
         model = build_model(
-            len(id2v),
-            256,
-            1024,
-            BATCH_SIZE
+            config[task]['vocab_size'],
+            config[task]['embedding_dim'],
+            config[task]['units'],
+            batch_size
         )
 
-        model.compile(optimizer='adam', loss=loss, run_eagerly=False)
+        model.compile(
+            optimizer='adam',
+            loss=tf.keras.losses.sparse_categorical_crossentropy(
+                labels, logits, from_logits=True
+            ),
+            run_eagerly=False
+        )
 
         history = model.fit(
             train_dataset,
-            epochs=epoch,
+            epochs=epochs,
             callbacks=[checkpoint_callback],
             verbose=1,
             steps_per_epoch=steps_per_epoch,
