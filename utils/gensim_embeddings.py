@@ -2,6 +2,8 @@ import numpy as np
 from gensim import utils
 import gensim.models
 
+from data import preprocessing
+
 
 # Iterator that yields sentences given a text file
 # Adapted from: https://radimrehurek.com/gensim/auto_examples/tutorials/run_word2vec.html
@@ -60,6 +62,28 @@ def create_matrix(id2v, wv, oov=None):
                 pass
 
     return emb_mat
+
+
+def load_and_create(model_path, data, oov=None, algorithm=gensim.models.FastText, **kwargs):
+    """
+    Loads a model from disk and creates an embedding matrix from the given data.
+
+    Arguments:
+        model_path: string. Path to saved model file.
+        data: string or dict. Path to vocabulary text file or id-to-vector dictionary.
+        oov: function. Takes no input and outputs a vector of length (embedding_size).
+            Handles out-of-vocabulary (OOV) tokens. If None, OOV embeddings are zero vectors.
+        algorithm: gensim model used, e.g. Word2Vec or FastText.
+        **kwargs: keyword arguments passed to the preprocessing function.
+    
+    Returns:
+        A NumPy array of shape (vocabulary_size, embedding_size).
+    """
+    
+    model = algorithm.load(model_path)
+    if isinstance(data, str):
+        data, _, _ = preprocessing(data, **kwargs)
+    return create_matrix(data, model.wv, oov)
 
 
 # Example usage
