@@ -7,7 +7,7 @@ import json
 from tqdm import tqdm
 
 
-def preprocess_v2id(data, v2id, max_seq=None, add_start=True,
+def preprocess_v2id(data, v2id, model=None, max_seq=None, add_start=True,
                     add_end=True, remove_punctuation=True,
                     tokenize_type="w", padding='post'):
     """
@@ -54,7 +54,7 @@ def preprocess_v2id(data, v2id, max_seq=None, add_start=True,
     lines = handle_sos_eos(lines, add_start, add_end)
 
     # Encode text data using v2id
-    lines = handle_encoding_v2id(lines, v2id)
+    lines = handle_encoding_v2id(lines, v2id, model)
 
     # Padd Padd Padd ..
     lines = handle_padding(lines, padding, max_seq, v2id)
@@ -189,10 +189,27 @@ def handle_sos_eos(lines, add_start, add_end):
     return lines
 
 
-def handle_encoding_v2id(lines, v2id):
-    encoded_lines = [[v2id.setdefault(l, v2id['<UNK>'])
-                      for l in line] for line in tqdm(lines)]
+def handle_encoding_v2id(lines, v2id, model=None):
+    if model is not None:
+        encoded_lines = [[handle_oov(l, v2id, model)
+                        for l in line] for line in tqdm(lines)]
+    else:
+        encoded_lines = [[v2id.setdefault(l, v2id['<UNK>'])
+                        for l in line] for line in tqdm(lines)]
     return encoded_lines
+
+
+def handle_oov(token, v2id, model, num_similar=10, threshold=0.5):
+    if token in v2id:
+        return v2id[token]
+    similar_words = model.wv.similar_by_word(token, num_similar)
+    for i in range(num_similar):
+        w = similar_words[i]
+        if w[1] < threshold:
+            return v2id['<UNK>']
+        if w[0] in v2id:
+            return v2id[w[0]]
+    return v2id['<UNK>']
 
 
 def handle_padding(lines, padding, max_seq, v2id):
