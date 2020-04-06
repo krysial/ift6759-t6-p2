@@ -1,6 +1,14 @@
 {
   "lr": 0.001,
-  "model": "baseline",
-  "batch_size": 128,
-  "epochs": 5
+  "dr": 0.1,
+  "batch_size": 4,
+  "epochs": 10,
+  "atten_dim": 8,
+  "num_heads": 2,
+  "ff_dim": 64,
+  "checkpoints_path": "saved_models/checkpoints",
+  "max_to_keep": 2,
+  "after_num_epochs": 1,
+  "best_model_path": "saved_models",
+  "model_name": "transformer"
 }
