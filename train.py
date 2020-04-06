@@ -15,7 +15,8 @@ def main(args):
 
     options = {}
     if OPTIONS_CONF_FILE:
-        assert os.path.isfile(OPTIONS_CONF_FILE), f"invalid config file: {OPTIONS_CONF_FILE}"
+        assert os.path.isfile(
+            OPTIONS_CONF_FILE), f"invalid config file: {OPTIONS_CONF_FILE}"
         with open(OPTIONS_CONF_FILE, "r") as f:
             options = json.load(f)
 
