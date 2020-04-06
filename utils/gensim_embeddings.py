@@ -70,7 +70,7 @@ def load_and_create(model_path, data, oov=None, algorithm=gensim.models.FastText
 
     Arguments:
         model_path: string. Path to saved model file.
-        data: string or dict. Path to vocabulary text file or id-to-vector dictionary.
+        data: string or dict. Path to vocabulary text file or id-to-vocabulary dictionary.
         oov: function. Takes no input and outputs a vector of length (embedding_size).
             Handles out-of-vocabulary (OOV) tokens. If None, OOV embeddings are zero vectors.
         algorithm: gensim model used, e.g. Word2Vec or FastText.
