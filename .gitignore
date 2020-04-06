@@ -6,3 +6,4 @@ __pycache__/
 results/
 embeddings/
 language_models/
+**/Icon*
