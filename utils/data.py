@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def preprocess_v2id(data, v2id, model=None, max_seq=None, add_start=True,
-                    add_end=True, remove_punctuation=True,
+                    add_end=True, remove_punctuation=True, lower=True,
                     tokenize_type="w", padding='post'):
     """
     Gets tokenized and integer encoded format of given
@@ -39,6 +39,10 @@ def preprocess_v2id(data, v2id, model=None, max_seq=None, add_start=True,
     # Read data as list of samples
     lines = checkout_data(data)
 
+    # Convert to lowercase
+    if lower:
+            lines = [line.lower() for line in lines]
+
     # Handle punctuations if required
     if remove_punctuation:
         lines = handle_punctuation(lines)
@@ -63,8 +67,8 @@ def preprocess_v2id(data, v2id, model=None, max_seq=None, add_start=True,
 
 
 def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
-                  add_end=True, remove_punctuation=True, tokenize_type="w",
-                  padding='post', save_v2id_path=None):
+                  add_end=True, remove_punctuation=True, lower=True,
+                  tokenize_type="w", padding='post', save_v2id_path=None):
     """
     Gets tokenized and integer encoded format of given text corpus.
 
@@ -95,6 +99,10 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 
     # Read data as list of samples
     lines = checkout_data(data)
+
+    # Convert to lowercase
+    if lower:
+        lines = [line.lower() for line in lines]
 
     # Handle punctuations if required
     if remove_punctuation:
