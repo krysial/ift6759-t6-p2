@@ -3,11 +3,9 @@ import tensorflow as tf
 from seq_2_seq_models.encoder import Encoder_GRU
 from seq_2_seq_models.decoder import Decoder_GRU
 
-
-def Loss(labels, logits):
-    return tf.keras.losses.SparseCategoricalCrossentropy(
-        labels, logits, from_logits=True, reduction='none'
-    )
+Loss = tf.keras.losses.SparseCategoricalCrossentropy(
+    from_logits=True, reduction='none'
+)
 
 
 class seq_2_seq_GRU(tf.keras.Model):

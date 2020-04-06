@@ -116,15 +116,9 @@ def train(encoder_lang_model_task, decoder_lang_model_task, config_path,
         remove_punctuation=decoder_config['remove_punctuation']
     )
 
-    input_tensor_train,
-    input_tensor_valid,
-    target_tensor_train,
-    target_tensor_valid
-    = train_test_split(
-        encoder_dataset,
-        decoder_dataset,
-        test_size=train_split_ratio
-    )
+    input_tensor_train, input_tensor_valid,
+    target_tensor_train, target_tensor_valid = train_test_split(
+        encoder_dataset, decoder_dataset, test_size=train_split_ratio)
 
     BUFFER_SIZE = len(input_tensor_train)
     if steps_per_epoch is None:
@@ -176,11 +170,8 @@ def train(encoder_lang_model_task, decoder_lang_model_task, config_path,
 
         optimizer = tf.keras.optimizers.Adam()
 
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
-            from_logits=True, reduction='none'
-        )
         seq_2_seq_model.compile(
-            optimizer=optimizer, loss=loss_object, run_eagerly=True
+            optimizer=optimizer, loss=Loss, run_eagerly=True
         )
 
         return seq_2_seq_model

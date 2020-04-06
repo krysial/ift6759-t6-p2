@@ -33,10 +33,10 @@ class Decoder_GRU(tf.keras.Model):
                 # if model.layers[i].name[:5] == 'dense':
                     # self.fc = model.layers[i]
 
-    # used for attention
-    self.attention = BahdanauAttention(self.dec_units)
+        # used for attention
+        self.attention = BahdanauAttention(self.dec_units)
 
-    self.attention_fc = tf.keras.layers.Dense(self.dec_units)
+        self.attention_fc = tf.keras.layers.Dense(self.dec_units)
 
     # @tf.function(experimental_compile=True)
     def call(self, x, hidden, enc_output, dec_init):
