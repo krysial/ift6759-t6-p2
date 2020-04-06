@@ -16,23 +16,23 @@ def preprocess_v2id(data, v2id, max_seq=None, add_start=True,
 
     Arguments:
         data: string or list. Path of input text file when string and
-              data (batch of sentences expected) itself when List(list).
+            data (batch of sentences expected) itself when List(list).
         v2id: string or dict, Mapping of vocabulary to integer encoding.
         max_seq: int or Nonr, default None. Sequence length to retain.
         add_start: boolean, default True.
-                   If True, adds start-of-sequence (<SOS>)
+            If True, adds start-of-sequence (<SOS>)
         add_end: boolean, default True.
-                 If True, adds end-of-sequence (<EOS>) tokens.
+            If True, adds end-of-sequence (<EOS>) tokens.
         remove_punctuation: boolean, default True.
-                            If True, removes punctuation symbols.
+            If True, removes punctuation symbols.
         tokenize_type: "w" or "c", default "w".
-                       Defines token type as word(w) or char(c).
+            Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
-                 Defines where to pad, begining('pre') or end('post').
+            Defines where to pad, begining('pre') or end('post').
 
     Returns:
-        Dictionaries ``v2id`` and ``id2v`` for encoding and
-                decoding vocabulary as id
+        Dictionaries ``v2id`` and ``id2v`` for encoding and decoding
+            vocabulary as id
         Numpy array ``encoded_lines`` of shape (batch_size, max_seq)
     """
 
@@ -70,26 +70,26 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 
     Arguments:
         data: string or list. Path of input text file when string and
-              data (batch of sentences expected) itself when List(list).
+            data (batch of sentences expected) itself when List(list).
         max_seq: int or Nonr, default None. Sequence length to retain.
         vocab_size: int or None, default None. Number of words to retain,
-                    sorted by most common. If None, retain all words.
+            sorted by most common. If None, retain all words.
         add_start: boolean, default True.
-                   If True, adds start-of-sequence (<SOS>)
+            If True, adds start-of-sequence (<SOS>)
         add_end: boolean, default True.
-                 If True, adds end-of-sequence (<EOS>) tokens.
+            If True, adds end-of-sequence (<EOS>) tokens.
         remove_punctuation: boolean, default True.
-                            If True, removes punctuation symbols.
+            If True, removes punctuation symbols.
         tokenize_type: "w" or "c", default "w".
-                       Defines token type as word(w) or char(c).
+            Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
-                 Defines where to pad, begining('pre') or end('post').
+            Defines where to pad, begining('pre') or end('post').
         save_v2id_path: string, default is None.
-                        Path of saving v2id dictionary mapping.
+            Path of saving v2id dictionary mapping.
 
     Returns:
         Dictionaries ``v2id`` and ``id2v`` for encoding and
-                        decoding vocabulary as id
+            decoding vocabulary as id
         Numpy array ``encoded_lines`` of shape (batch_size, max_seq)
     """
 
@@ -126,12 +126,11 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 
 def handle_punctuation(lines):
     # Symbols to be removed, from punctuation_remover.py
-    PUNCTUATION = {",", ";", ":", "!", "?", ".", "'", '"',
-                   "(", ")", "...", "[", "]", "{", "}", "’"}
+    PUNCTUATION = {",", ";", ":", "!", "?", ".", "'",
+                   '"', "(", ")", "...", "[", "]", "{", "}", "’"}
     # Remove punctuation
-    split_lines = [
-        [x for x in line.split() if x not in PUNCTUATION] for line in lines
-    ]
+    split_lines = [[x for x in line.split() if x not in PUNCTUATION]
+                   for line in lines]
     lines = [' '.join(line) for line in split_lines]
     return lines
 
@@ -168,7 +167,7 @@ def handle_vocab(lines, tokenize_type, vocab_size):
         corpus = list(' '.join(lines))
     # Get most common words
     vocab = Counter(corpus).most_common(vocab_size) + \
-        [('<SOS>', 0), ('<EOS>', 0)]
+        [('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0)]
     # Create id to vocabulary dictionary
     id2v = dict(pd.DataFrame(vocab, columns=['tokens', 'count'])['tokens'])
     v2id = swap_dict_key_value(id2v)
@@ -191,7 +190,8 @@ def handle_sos_eos(lines, add_start, add_end):
 
 
 def handle_encoding_v2id(lines, v2id):
-    encoded_lines = [list(map(v2id.get, line)) for line in tqdm(lines)]
+    encoded_lines = [[v2id.setdefault(l, v2id['<UNK>'])
+                      for l in line] for line in tqdm(lines)]
     return encoded_lines
 
 
@@ -201,11 +201,7 @@ def handle_padding(lines, padding, max_seq, v2id):
     elif padding == 'post':
         padder = '<EOS>'
     encoded_lines = pad_sequences(
-        lines,
-        maxlen=max_seq,
-        padding=padding,
-        value=v2id[padder]
-    )
+        lines, maxlen=max_seq, padding=padding, value=v2id[padder])
     return encoded_lines
 
 

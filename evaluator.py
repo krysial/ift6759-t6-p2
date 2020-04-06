@@ -48,8 +48,10 @@ def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: b
 
 def main():
     parser = argparse.ArgumentParser('script for evaluating a model.')
-    parser.add_argument('--target-file-path', help='path to target (reference) file', required=True)
-    parser.add_argument('--input-file-path', help='path to input file', required=True)
+    parser.add_argument('--target-file-path',
+                        help='path to target (reference) file', required=True)
+    parser.add_argument('--input-file-path',
+                        help='path to input file', required=True)
     parser.add_argument('--print-all-scores', help='will print one score per sentence',
                         action='store_true')
     parser.add_argument('--do-not-run-model',
@@ -60,11 +62,13 @@ def main():
     args = parser.parse_args()
 
     if args.do_not_run_model:
-        compute_bleu(args.input_file_path, args.target_file_path, args.print_all_scores)
+        compute_bleu(args.input_file_path, args.target_file_path,
+                     args.print_all_scores)
     else:
         _, pred_file_path = tempfile.mkstemp()
         generate_predictions(args.input_file_path, pred_file_path)
-        compute_bleu(pred_file_path, args.target_file_path, args.print_all_scores)
+        compute_bleu(pred_file_path, args.target_file_path,
+                     args.print_all_scores)
 
 
 if __name__ == '__main__':

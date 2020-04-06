@@ -6,7 +6,7 @@ import time
 import click
 import json
 
-from language_models.language_model import build_model
+from language_models.language_model import build_model, Loss
 from utils.data import preprocessing
 
 
@@ -55,8 +55,8 @@ def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
         model_name + "_{epoch}.h5"
     )
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-                        filepath=checkpoint_prefix,
-                        save_weights_only=False)
+        filepath=checkpoint_prefix,
+        save_weights_only=False)
 
     # dataset
     id2v, v2id, train_dataset = preprocessing(
@@ -80,9 +80,9 @@ def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
     train_dataset = tf.data.Dataset.from_tensor_slices(train_dataset)
     train_dataset = train_dataset.map(split_input_target)
     train_dataset = train_dataset.shuffle(1000).batch(
-                        batch_size,
-                        drop_remainder=True
-                    ).repeat()
+        batch_size,
+        drop_remainder=True
+    ).repeat()
 
     # creating the model in the TPUStrategy scope means we will
     # train the model on the TPU
@@ -94,13 +94,7 @@ def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
             batch_size
         )
 
-        model.compile(
-            optimizer='adam',
-            loss=tf.keras.losses.sparse_categorical_crossentropy(
-                labels, logits, from_logits=True
-            ),
-            run_eagerly=False
-        )
+        model.compile(optimizer='adam', loss=Loss, run_eagerly=False)
 
         history = model.fit(
             train_dataset,

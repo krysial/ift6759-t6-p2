@@ -12,14 +12,14 @@ class BahdanauAttention(tf.keras.layers.Layer):
         # query hidden state shape == (batch_size, hidden size)
         # query_with_time_axis shape == (batch_size, 1, hidden size)
         # values shape == (batch_size, max_len, hidden size)
-        # we are doing this to broadcast addition
-        # along the time axis to calculate the score
+        # we are doing this to broadcast addition along the
+        # time axis to calculate the score
         query_with_time_axis = tf.expand_dims(query, 1)
 
         # score shape == (batch_size, max_length, 1)
         # we get 1 at the last axis because we are applying score to self.V
-        # the shape of the tensor before
-        # applying self.V is (batch_size, max_length, units)
+        # the shape of the tensor before applying self.V is
+        # (batch_size, max_length, units)
         score = self.V(tf.nn.tanh(
             self.W1(query_with_time_axis) + self.W2(values)))
 
