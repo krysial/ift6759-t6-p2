@@ -116,8 +116,12 @@ def train(encoder_lang_model_task, decoder_lang_model_task, config_path,
         remove_punctuation=decoder_config['remove_punctuation']
     )
 
-    input_tensor_train, input_tensor_valid,
-    target_tensor_train, target_tensor_valid = train_test_split(
+    (
+        input_tensor_train,
+        input_tensor_valid,
+        target_tensor_train,
+        target_tensor_valid
+    ) = train_test_split(
         encoder_dataset, decoder_dataset, test_size=train_split_ratio)
 
     BUFFER_SIZE = len(input_tensor_train)

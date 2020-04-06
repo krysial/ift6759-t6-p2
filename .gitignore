@@ -2,7 +2,7 @@
 .ipynb_checkpoints/
 .vscode/
 .DS_Store
-__pycache__/
+__pycache__/**
 results/
 embeddings/
 language_models/
