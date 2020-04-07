@@ -8,22 +8,22 @@ from seq_2_seq_models.transformer.multihead_attention import MultiHeadAttention
 
 class Encoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#encoder
-    def __init__(self, vocab_size, input_seq_len, opts, dropout_rate=0.1):
+    def __init__(self, vocab_size, max_input_seq_len, opts, dropout_rate=0.1):
         super().__init__()
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
-        self.pos_encoding = positional_encoding(input_seq_len, opts.atten_dim)
+        self.pos_encoding = positional_encoding(max_input_seq_len, opts.atten_dim)
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
         self.enc_layers = [EncoderLayer(opts) for _ in range(opts.num_layers)]
 
-    def call(self, inputs, input_pad_mask, training=True):
-
-        x = self.embedding(inputs)  # (batch_size, input_seq_len, d_model)
+    def call(self, inputs, input_pad_mask, training=True):  # (batch_size, input_seq_len, d_model)
+        seq_len = tf.shape(inputs)[1]
+        x = self.embedding(inputs)
         x *= tf.math.sqrt(tf.cast(self.atten_dim, tf.float32))  # TODO: check why
-        x = x + self.pos_encoding
+        x += self.pos_encoding[:, :seq_len, :]
         x = self.dropout(x, training=training)
 
         for i in range(self.num_layers):

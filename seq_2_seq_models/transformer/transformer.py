@@ -5,10 +5,10 @@ from seq_2_seq_models.transformer.utils import create_padding_mask, create_combi
 
 
 class Transformer(tf.keras.Model):
-    def __init__(self, input_seq_len, input_vocab_size, target_seq_len, target_vocab_size, opts):
+    def __init__(self, max_input_seq_len, input_vocab_size, max_target_seq_len, target_vocab_size, opts):
         super(Transformer, self).__init__()
-        self.encoder = Encoder(input_vocab_size, input_seq_len, opts)  # opts: batch_size, atten_dim, num_heads, ff_dim
-        self.decoder = Decoder(target_vocab_size, target_seq_len, opts)  # opts: batch_s, atten_dim, num_heads, ff_dim
+        self.encoder = Encoder(input_vocab_size, max_input_seq_len, opts)  # opts: batch_size, atten_dim, num_heads, ff_dim
+        self.decoder = Decoder(target_vocab_size, max_target_seq_len, opts)  # opts: batch_s, atten_dim, num_heads, ff_dim
         self.dense = tf.keras.layers.Dense(target_vocab_size)
 
     def call(self, input_target, training=True):  # TODO: pass masks

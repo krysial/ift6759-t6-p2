@@ -32,13 +32,16 @@ def main(arguments):
 
     # Dataset
     dataset_train, en_stats, fr_stats = dataloader.get_transformer_dataset(batch_size=opts.batch_size)
-    input_seq_len = en_stats[2]
-    input_vocab_size = len(en_stats[0]) + 1  # +1 bc 0 is padding
-    target_seq_len = fr_stats[2]
-    target_vocab_size = len(fr_stats[0]) + 1  # +1 bc 0 is padding
+    dataset_val, val_en_stats, val_fr_stats = dataloader.get_transformer_dataset(batch_size=opts.batch_size, dataset='val')
+
+    input_vocab_size = len(en_stats['id2w']) + 1  # +1 bc 0 is padding
+    target_vocab_size = len(fr_stats['id2w']) + 1  # +1 bc 0 is padding
+
+    max_input_seq_len = max(en_stats['max_seq_len'], val_en_stats['max_seq_len'])
+    max_target_seq_len = max(fr_stats['max_seq_len'], val_fr_stats['max_seq_len'])
 
     # Model
-    transformer = transformer_builder.get_model(opts, input_seq_len, input_vocab_size, target_seq_len, target_vocab_size)
+    transformer = transformer_builder.get_model(opts, max_input_seq_len, input_vocab_size, max_target_seq_len, target_vocab_size)
 
     # Model fit
     transformer.fit(
@@ -48,8 +51,8 @@ def main(arguments):
         verbose=1,
         steps_per_epoch=opts.steps_per_epoch,
         shuffle=True,
-        # validation_data=dataset_valid,
-        # validation_steps=steps_per_epoch
+        validation_data=dataset_val,
+        validation_steps=opts.steps_per_epoch
     )
 
 

@@ -9,21 +9,22 @@ from seq_2_seq_models.transformer.utils import point_wise_feed_forward_network, 
 
 class Decoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#decoder
-    def __init__(self, vocab_size, target_seq_len, opts, rate=0.1):
+    def __init__(self, vocab_size, max_target_seq_len, opts, rate=0.1):
         super().__init__()
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
-        self.positional_encoding = positional_encoding(target_seq_len, opts.atten_dim)
+        self.pos_encoding = positional_encoding(max_target_seq_len, opts.atten_dim)
         self.dropout = tf.keras.layers.Dropout(rate)
 
         self.dec_layers = [DecoderLayer(opts) for _ in range(opts.num_layers)]
 
-    def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_pad, training= True):
+    def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_pad, training=True):
+        seq_len = tf.shape(targets)[1]
         x = self.embedding(targets)
         x *= tf.math.sqrt(tf.cast(self.atten_dim, tf.float32))  # TODO: check why
-        x = x + self.positional_encoding
+        x += self.pos_encoding[:, :seq_len, :]
         x = self.dropout(x, training=training)
 
         for i in range(self.num_layers):
