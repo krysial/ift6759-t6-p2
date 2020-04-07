@@ -45,7 +45,7 @@ class Model:
             self.train_loss.reset_states()
             self.train_accuracy.reset_states()
             # batches
-            for batch, (inputs, targets) in enumerate(dataset.take(1)):
+            for batch, (inputs, targets) in enumerate(dataset.take(1)):  # TODO: remove take 1 when training the model
                 targets_input = targets[:, :-1]
                 targets_real = targets[:, 1:]
 
@@ -56,7 +56,7 @@ class Model:
                 combined_mask = tf.maximum(target_pad_mask, target_look_ahead_mask)  # target_look_ahead_mask in decoding
 
                 with tf.GradientTape() as tape:
-                    predictions = model(inputs, targets_input, input_pad_mask, combined_mask)
+                    predictions = model(inputs, targets_input, input_pad_mask, combined_mask, training=True)
                     loss = self.loss_function(targets_real, predictions)
 
                 gradients = tape.gradient(loss, model.trainable_variables)

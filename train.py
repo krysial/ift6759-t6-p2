@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from seq_2_seq_models.transformer.training import Model
 
-PATH_DATA = 'data'
+PATH_DATA = 'config'
 OPTIONS_CONF_FILE = os.path.join(PATH_DATA, 'config.json')
 
 

@@ -11,11 +11,13 @@ class Encoder(tf.keras.layers.Layer):
     def __init__(self, vocab_size, input_seq_len, opts, dropout_rate=0.1):
         super().__init__()
 
+        self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
         self.pos_encoding = positional_encoding(input_seq_len, opts.atten_dim)
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
-        self.enc_layer_1 = EncoderLayer(opts)
+
+        self.enc_layers = [EncoderLayer(opts) for _ in range(opts.num_layers)]
 
     def call(self, inputs, input_pad_mask, training=True):
 
@@ -23,7 +25,9 @@ class Encoder(tf.keras.layers.Layer):
         x *= tf.math.sqrt(tf.cast(self.atten_dim, tf.float32))  # TODO: check why
         x = x + self.pos_encoding
         x = self.dropout(x, training=training)
-        x = self.enc_layer_1(x, input_pad_mask)
+
+        for i in range(self.num_layers):
+            x = self.enc_layers[i](x, input_pad_mask, training=training)
 
         return x
 

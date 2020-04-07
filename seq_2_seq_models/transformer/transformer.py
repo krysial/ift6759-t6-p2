@@ -10,8 +10,8 @@ class Transformer(tf.keras.layers.Layer):
         self.decoder = Decoder(target_vocab_size, target_seq_len, opts)  # opts: batch_s, atten_dim, num_heads, ff_dim
         self.dense = tf.keras.layers.Dense(target_vocab_size)
 
-    def call(self, inputs, targets, input_pad_mask, target_look_ahead_mask):
-        enc_outputs = self.encoder(inputs, input_pad_mask)
-        dec_outputs = self.decoder(targets, enc_outputs, input_pad_mask, target_look_ahead_mask)  # input_pad_mask = enc_pad_mask
+    def call(self, inputs, targets, input_pad_mask, target_look_ahead_mask, training=True):
+        enc_outputs = self.encoder(inputs, input_pad_mask, training=training)
+        dec_outputs = self.decoder(targets, enc_outputs, input_pad_mask, target_look_ahead_mask, training=training)  # input_pad_mask = enc_pad_mask
         dense_outputs = self.dense(dec_outputs)
         return dense_outputs

@@ -3,6 +3,7 @@
   "dr": 0.1,
   "batch_size": 4,
   "epochs": 10,
+  "num_layers": 1,
   "atten_dim": 8,
   "num_heads": 2,
   "ff_dim": 64,

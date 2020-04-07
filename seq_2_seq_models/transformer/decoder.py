@@ -11,18 +11,23 @@ class Decoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#decoder
     def __init__(self, vocab_size, target_seq_len, opts, rate=0.1):
         super().__init__()
+
+        self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
         self.positional_encoding = positional_encoding(target_seq_len, opts.atten_dim)
         self.dropout = tf.keras.layers.Dropout(rate)
-        self.dec_layer_1 = DecoderLayer(opts)
+
+        self.dec_layers = [DecoderLayer(opts) for _ in range(opts.num_layers)]
 
     def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_pad, training= True):
         x = self.embedding(targets)
         x *= tf.math.sqrt(tf.cast(self.atten_dim, tf.float32))  # TODO: check why
         x = x + self.positional_encoding
         x = self.dropout(x, training=training)
-        x = self.dec_layer_1(x, enc_output, enc_mask_pad, target_look_ahead_pad)
+
+        for i in range(self.num_layers):
+            x = self.dec_layers[i](x, enc_output, enc_mask_pad, target_look_ahead_pad, training)
 
         return x
 
@@ -44,19 +49,19 @@ class DecoderLayer(tf.keras.layers.Layer):
         self.dropout2 = tf.keras.layers.Dropout(rate)
         self.dropout3 = tf.keras.layers.Dropout(rate)
 
-    def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_mask):
+    def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_mask, training=True):
         q, _ = self.masked_multihead_attention(targets, targets, targets, target_look_ahead_mask)
-        q = self.dropout1(q)
+        q = self.dropout1(q, training=training)
         # residual connection + layer normalization
         q = self.layernorm1(q + targets)
 
         att_output, _ = self.multihead_attention(q, enc_output, enc_output, enc_mask_pad)  # q, k, v
-        att_output = self.dropout2(att_output)
+        att_output = self.dropout2(att_output, training=training)
         # residual connection + layer normalization
         att_output = self.layernorm2(att_output + q)
 
         ff_output = self.ffnn(att_output)
-        ff_output = self.dropout3(ff_output)
+        ff_output = self.dropout3(ff_output, training=training)
         # residual connection + layer normalization
         ff_output = self.layernorm3(ff_output + att_output)
 
