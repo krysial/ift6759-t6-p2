@@ -32,9 +32,8 @@ def get_transformer_dataset(batch_size, dataset='train'):
     fr_max_seq_len = fr_lines.shape[1]
     en_max_seq_len = en_lines.shape[1]
 
-    dataset = tf.data.Dataset.from_tensor_slices((en_lines, fr_lines))
+    dataset = tf.data.Dataset.from_tensor_slices(((en_lines, fr_lines), fr_lines))  # adding targets to the inputs
     dataset = dataset.batch(batch_size, drop_remainder=True)
-    #dataset = dataset.batch(batch_size)
 
     return dataset, (en_id2v, en_v2id, en_max_seq_len), (fr_id2v, fr_v2id, fr_max_seq_len)
 

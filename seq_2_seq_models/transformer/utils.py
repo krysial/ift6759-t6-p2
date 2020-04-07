@@ -46,3 +46,10 @@ def point_wise_feed_forward_network(atten_dim, dff):
         tf.keras.layers.Dense(dff, activation='relu'),  # (batch_size, seq_len, dff)
         tf.keras.layers.Dense(atten_dim)  # (batch_size, seq_len, d_model)
     ])
+
+
+def create_combined_mask(targets_input):
+    target_pad_mask = create_padding_mask(targets_input)
+    target_look_ahead_mask = create_look_ahead_mask(tf.shape(targets_input)[-1])  # seq_len of targets
+    combined_mask = tf.maximum(target_pad_mask, target_look_ahead_mask)
+    return combined_mask

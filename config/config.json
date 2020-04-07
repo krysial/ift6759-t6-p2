@@ -8,8 +8,7 @@
   "num_heads": 2,
   "ff_dim": 64,
   "checkpoints_path": "saved_models/checkpoints",
-  "max_to_keep": 2,
-  "after_num_epochs": 1,
+  "steps_per_epoch": 2,
   "best_model_path": "saved_models",
   "model_name": "transformer"
 }
