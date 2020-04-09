@@ -2,8 +2,6 @@
 
   "GRU":
   {
-    "encoder_lang_model_task": null,
-    "decoder_lang_model_task": null,
     "encoder_config": 
     {
       "lang_model_checkpointer": null,
