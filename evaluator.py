@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import tempfile
+import os
 
 
 def generate_predictions(input_file_path: str, pred_file_path: str):
@@ -18,10 +19,59 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     Returns: None
 
     """
+    with open(config_path, "r") as fd:
+        config = json.load(fd)
 
-    ##### MODIFY BELOW #####
-    ...
-    ##### MODIFY ABOVE #####
+    model_path = os.path.join(
+        os.getcwd(),
+        'seq_2_seq_models',
+        'unformated_en_2_unformated_fr_w2w'
+    )
+    model_path = os.path.join(model_path, 'GRU_2.h5')
+
+    enc_v2id_path = os.path.join(
+        os.getcwd(),
+        "language_models",
+        encoder_lang_model_task,
+        "v2id.json"
+    )
+
+    w_2_w_model = seq_2_seq_GRU(
+        vocab_inp_size=vocab_inp_size,
+        encoder_embedding_dim=encoder_config['embedding_dim'],
+        encoder_units=encoder_config['units'],
+        vocab_tar_size=vocab_tar_size,
+        decoder_embedding_dim=decoder_config['embedding_dim'],
+        decoder_units=decoder_config['units'],
+        decoder_v2id=decoder_v2id,
+        targ_seq_len=decoder_config['max_seq'],
+        BATCH_SIZE=BATCH_SIZE,
+        encoder_lang_model=encoder_config['lang_model_checkpointer'],
+        decoder_lang_model=decoder_config['lang_model_checkpointer']
+    )
+
+    c_2_c_model = seq_2_seq_GRU(
+        vocab_inp_size=vocab_inp_size,
+        encoder_embedding_dim=encoder_config['embedding_dim'],
+        encoder_units=encoder_config['units'],
+        vocab_tar_size=vocab_tar_size,
+        decoder_embedding_dim=decoder_config['embedding_dim'],
+        decoder_units=decoder_config['units'],
+        decoder_v2id=decoder_v2id,
+        targ_seq_len=decoder_config['max_seq'],
+        BATCH_SIZE=BATCH_SIZE,
+        encoder_lang_model=encoder_config['lang_model_checkpointer'],
+        decoder_lang_model=decoder_config['lang_model_checkpointer']
+    )
+
+    processed_sentence = None
+
+    batched_unformated_french_w2w = np.argmax(w_2_w_model.predict(processed_sentence), axis=-1)
+
+    batched_unformated_french_w2w > french_w2w.txt
+
+    data = process(french_w2w.txt)
+    c_2c_model.predict(data)
 
 
 def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: bool):

@@ -32,13 +32,12 @@ class seq_2_seq_GRU(tf.keras.Model):
 
     # @tf.function(experimental_compile=True)
     def call(self, tup, targ=None, training=False):
-
         inp, targ = tup
 
         enc_hidden = self.encoder.initialize_hidden_state(self.BATCH_SIZE)
 
         enc_output, enc_hidden = self.encoder(inp, enc_hidden)
-        dec_hidden = enc_hidden
+        dec_hidden = None
 
         dec_input = tf.expand_dims([self.v2id['<SOS>']] * self.BATCH_SIZE, 1)
 
@@ -54,15 +53,9 @@ class seq_2_seq_GRU(tf.keras.Model):
         for t in range(1, self.targ_seq_len):
             # passing enc_output to the decoder
 
-            if t == 1:
-                prediction, dec_hidden, _ = self.decoder(
-                    dec_input, dec_hidden, enc_output, None
-                )
-
-            else:
-                prediction, dec_hidden, _ = self.decoder(
-                    dec_input, dec_hidden, enc_output, dec_hidden
-                )
+            prediction, dec_hidden, _ = self.decoder(
+                dec_input, dec_hidden, enc_output, dec_hidden
+            )
 
             Prediction = tf.argmax(prediction, -1)
             Predictions.append(prediction)
