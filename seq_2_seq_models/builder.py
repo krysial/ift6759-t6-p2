@@ -16,7 +16,7 @@ def loss_function(real, pred):
     return tf.reduce_mean(loss_)/tf.reduce_sum(mask)
 
 
-def get_model(model_name, train_opts, model_opts,
+def get_model(model_name, train_opts, seq_model_opts,
               encoder_lang_config, decoder_lang_config):
 
     if model_name == "Transformer":
@@ -37,7 +37,7 @@ def get_model(model_name, train_opts, model_opts,
     return model
 
 
-def get_model_Transformer(model_name, model_opts,
+def get_model_Transformer(model_name, seq_model_opts,
                           encoder_lang_config, decoder_lang_config):
 
     transformer = Transformer(
@@ -45,43 +45,37 @@ def get_model_Transformer(model_name, model_opts,
         input_vocab_size=encoder_lang_config["vocab_size"],
         max_target_seq_len=decoder_lang_config["max_seq"],
         target_vocab_size=decoder_lang_config["vocab_size"],
-        opts=SimpleNamespace(**model_opts)
+        opts=SimpleNamespace(**seq_model_opts)
     )
 
     return transformer
 
 
-def get_model_GRU(model_name, model_opts,
+def get_model_GRU(model_name, seq_model_opts,
                   encoder_lang_config, decoder_lang_config,
                   ):
 
-    encoder_checkpoint_file = model_name + \
-        "_{}.h5".format(model_opts['checkpoint_epoch'])
-    model_opts['encoder_config']['lang_model_checkpointer'] = os.path.join(
-        "language_models",
-        model_opts['encoder_lang_model_task'],
-        encoder_checkpoint_file
+    seq_model_opts['encoder_config']['lang_model_checkpointer'] = os.path.join(
+        "language_models", seq_model_opts['encoder_lang_model_task'],
+        model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
     )
 
-    decoder_checkpoint_file = model_name + \
-        "_{}.h5".format(model_opts['checkpoint_epoch'])
-    model_opts['decoder_config']['lang_model_checkpointer'] = os.path.join(
-        "language_models",
-        model_opts['decoder_lang_model_task'],
-        decoder_checkpoint_file
+    seq_model_opts['decoder_config']['lang_model_checkpointer'] = os.path.join(
+        "language_models", seq_model_opts['decoder_lang_model_task'],
+        model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
     )
 
     GRU_seq_2_seq = seq_2_seq_GRU(
         vocab_inp_size=encoder_lang_config['vocab_size'],
         encoder_embedding_dim=encoder_lang_config['embedding_dim'],
-        encoder_units=model_opts['encoder_config']['units'],
+        encoder_units=seq_model_opts['encoder_config']['units'],
         vocab_tar_size=decoder_lang_config['vocab_size'],
         decoder_embedding_dim=decoder_lang_config['embedding_dim'],
-        decoder_units=model_opts['decoder_config']['units'],
-        decoder_v2id=model_opts['decoder_v2id'],
+        decoder_units=seq_model_opts['decoder_config']['units'],
+        decoder_v2id=seq_model_opts['decoder_v2id'],
         targ_seq_len=decoder_lang_config['max_seq'],
-        encoder_lang_model=model_opts['encoder_config']['lang_model_checkpointer'],
-        decoder_lang_model=model_opts['decoder_config']['lang_model_checkpointer']
+        encoder_lang_model=seq_model_opts['encoder_config']['lang_model_checkpointer'],
+        decoder_lang_model=seq_model_opts['decoder_config']['lang_model_checkpointer']
     )
 
     return GRU_seq_2_seq

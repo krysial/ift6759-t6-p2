@@ -39,46 +39,51 @@ def get_transformer_dataset(batch_size, dataset='train'):
         {'id2w': fr_id2v, 'w2id': fr_v2id, 'max_seq_len': fr_max_seq_len}
 
 
-def get_dataset_train(encoder_lang_config,
-                      decoder_lang_config,
-                      BATCH_SIZE,
-                      train_split_ratio,
-                      steps_per_epoch,
-                      model_name,
-                      encoder_lang_model_task,
-                      decoder_lang_model_task,
-                      ):
+def get_dataset_train(
+    BATCH_SIZE,
+    train_split_ratio,
+    steps_per_epoch,
+    model_name,
+    encoder_lang_model_task,
+    decoder_lang_model_task,
+    lang_model_opts
+):
     '''
 
 
     '''
+
+    ##########
     # dataset
+    ##########
     encoder_v2id, encoder_dataset = preprocess_v2id(
-        data=os.path.join(os.getcwd(), encoder_lang_config['data_file']),
+        data=os.path.join(
+            os.getcwd(), lang_model_opts[encoder_lang_model_task]['data_file']),
         v2id=os.path.join(
             os.getcwd(),
             "language_models",
             encoder_lang_model_task,
             "v2id.json"
         ),
-        tokenize_type=encoder_lang_config['tokenize_type'],
-        max_seq=encoder_lang_config['max_seq'],
-        remove_punctuation=encoder_lang_config['remove_punctuation'],
-        fasttext_model=encoder_lang_config['fasttext_model'],
+        tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
+        max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
+        remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
+        fasttext_model=lang_model_opts[encoder_lang_model_task]['fasttext_model'],
     )
 
     decoder_v2id, decoder_dataset = preprocess_v2id(
-        data=os.path.join(os.getcwd(), decoder_lang_config['data_file']),
+        data=os.path.join(
+            os.getcwd(), lang_model_opts[decoder_lang_model_task]['data_file']),
         v2id=os.path.join(
             os.getcwd(),
             "language_models",
             decoder_lang_model_task,
             "v2id.json"
         ),
-        tokenize_type=decoder_lang_config['tokenize_type'],
-        max_seq=decoder_lang_config['max_seq'],
-        remove_punctuation=decoder_lang_config['remove_punctuation'],
-        fasttext_model=decoder_lang_config['fasttext_model'],
+        tokenize_type=lang_model_opts[decoder_lang_model_task]['tokenize_type'],
+        max_seq=lang_model_opts[decoder_lang_model_task]['max_seq'],
+        remove_punctuation=lang_model_opts[decoder_lang_model_task]['remove_punctuation'],
+        fasttext_model=lang_model_opts[decoder_lang_model_task]['fasttext_model'],
     )
 
     ##########
@@ -99,18 +104,16 @@ def get_dataset_train(encoder_lang_config,
 
     if steps_per_epoch is None:
         steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
-    vocab_inp_size = len(encoder_v2id)
-    vocab_tar_size = len(decoder_v2id)
 
-    encoder_lang_config['max_seq'] = encoder_dataset.shape[-1]
-    decoder_lang_config['max_seq'] = decoder_dataset.shape[-1]
+    lang_model_opts[encoder_lang_model_task]['max_seq'] = encoder_dataset.shape[-1]
+    lang_model_opts[decoder_lang_model_task]['max_seq'] = decoder_dataset.shape[-1]
 
-    encoder_lang_config['vocab_size'] = vocab_inp_size
-    decoder_lang_config['vocab_size'] = vocab_tar_size
+    lang_model_opts[encoder_lang_model_task]['vocab_size'] = len(encoder_v2id)
+    lang_model_opts[decoder_lang_model_task]['vocab_size'] = len(decoder_v2id)
 
     print("#### ENC-DEC DATA Preprocessed ####")
-    print("Enc:", encoder_lang_config)
-    print("Dec:", decoder_lang_config)
+    print("Enc:", lang_model_opts[encoder_lang_model_task])
+    print("Dec:", lang_model_opts[decoder_lang_model_task])
 
     ##########
     # TF.DATA.DATASET
@@ -136,11 +139,12 @@ def get_dataset_train(encoder_lang_config,
     ##########
 
     return (
-        train_opts,  # = LOAD CONFIG/CONFIG.JSON
-        model_opts,  # = LOAD CONFIG/SEQ_2_SEQ_MODEL.JSON
+        lang_model_opts,
         dataset_train,
-        dataset_valid
+        dataset_valid,
+        steps_per_epoch
     )
 
 
 def get_dataset_eval():
+    pass

@@ -19,37 +19,39 @@ logging.disable(logging.CRITICAL)
 
 
 @click.command()
-@click.option('--encoder_lang_model_task', default='unformated_en_w2w')
-@click.option('--decoder_lang_model_task', default='unformated_fr_w2w')
-@click.option('--lang_model_config_path', default='config/language_models.json')
-@click.option('--seq_model_config_path', default='config/seq_2_seq_model.json')
-@click.option('--train_config_path', default='config/train_config.json')
-def train(encoder_lang_model_task, decoder_lang_model_task,
-          lang_model_config_path, seq_model_config_path, train_config_path,
-          ):
+@click.option('--lang_model_opts_path', default='config/language_models.json')
+@click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
+@click.option('--train_opts_path', default='config/train_config.json')
+def train(
+    lang_model_opts_path, seq_model_opts_path, train_opts_path,
+):
 
-    with open(lang_model_config_path, "r") as fd:
-        lang_model_config = json.load(fd)
+    # lang_model_opts[encoder_lang_model_task] = encoder_lang_config = lang_model_opts[train_opts['encoder_lang_model_task']]
+    # lang_model_opts[decoder_lang_model_task] = decoder_lang_config = lang_model_opts[train_opts['decoder_lang_model_task']]
 
-    with open(train_config_path, "r") as fd:
-        train_config = json.load(fd)
+    with open(lang_model_opts_path, "r") as fd:
+        lang_model_opts = json.load(fd)
 
-    with open(seq_model_config_path, "r") as fd:
-        seq_model_config[train_config['model_name']] = json.load(fd)
+    with open(train_opts_path, "r") as fd:
+        train_opts = json.load(fd)
+
+    with open(seq_model_opts_path, "r") as fd:
+        seq_model_opts = json.load(fd)
+        seq_model_opts = seq_model_opts[train_opts['model_name']]
 
     # Directory where the checkpoints will be saved
     checkpoint_dir = os.path.join(
         os.getcwd(),
         'seq_2_seq_models',
-        encoder_lang_model_task[:-4] + "_2_" +
-        decoder_lang_model_task[:-4] + "_" +
-        encoder_lang_model_task[-1] + "2" +
-        decoder_lang_model_task[-1]
+        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
+        train_opts['decoder_lang_model_task'][:-4] + "_" +
+        train_opts['encoder_lang_model_task'][-1] + "2" +
+        train_opts['decoder_lang_model_task'][-1]
     )
     checkpoint_prefix = os.path.join(
         os.getcwd(),
         checkpoint_dir,
-        train_config['model_name'] + "_{epoch}.h5"
+        train_opts['model_name'] + "_{epoch}.h5"
     )
 
     # Mahmoud
@@ -66,58 +68,58 @@ def train(encoder_lang_model_task, decoder_lang_model_task,
         max_seq, vocab_size, remove_punctuation, tokenize_type,
         data_file, embedding_dim, units, lang_model_checkpointer
     '''
-    encoder_lang_config = lang_model_config[encoder_lang_model_task]
-    decoder_lang_config = lang_model_config[decoder_lang_model_task]
-    encoder_lang_config['tokenize_type'] = list(encoder_lang_model_task)[-1]
-    decoder_lang_config['tokenize_type'] = list(decoder_lang_model_task)[-1]
+    lang_model_opts[train_opts['encoder_lang_model_task']
+                    ]['tokenize_type'] = list(train_opts['encoder_lang_model_task'])[-1]
+    lang_model_opts[train_opts['decoder_lang_model_task']
+                    ]['tokenize_type'] = list(train_opts['decoder_lang_model_task'])[-1]
 
-    encoder_lang_config['data_file'] = os.path.join(
+    lang_model_opts[train_opts['encoder_lang_model_task']]['data_file'] = os.path.join(
         "data",
-        "aligned_" + encoder_lang_model_task.split("_")[0] + "_" +
-        encoder_lang_model_task.split("_")[1]
+        "aligned_" + train_opts['encoder_lang_model_task'].split("_")[0] + "_" +
+        train_opts['encoder_lang_model_task'].split("_")[1]
     )
-    decoder_lang_config['data_file'] = os.path.join(
+    lang_model_opts[train_opts['decoder_lang_model_task']]['data_file'] = os.path.join(
         "data",
-        "aligned_" + decoder_lang_model_task.split("_")[0] +
-        "_" + decoder_lang_model_task.split("_")[1]
+        "aligned_" + train_opts['decoder_lang_model_task'].split("_")[0] +
+        "_" + train_opts['decoder_lang_model_task'].split("_")[1]
     )
 
     ###########
 
     (
-        train_opts,  # = LOAD CONFIG/CONFIG.JSON
-        model_opts,  # = LOAD CONFIG/SEQ_2_SEQ_MODEL.JSON
+        lang_model_opts,  # = LOAD CONFIG/LANGUAGE_MODELS.JSON
         dataset_train,
-        dataset_valid
-    ) = get_dataset_train(encoder_lang_config=encoder_lang_config,
-                          decoder_lang_config=decoder_lang_config,
-                          batch_size=train_config['batch_size'],
-                          train_split_ratio=train_config['train_split_ratio'],
-                          steps_per_epoch=train_config['steps_per_epoch'],
-                          model_name=train_config['model_name'],
-                          encoder_lang_model_task=encoder_lang_model_task,
-                          decoder_lang_model_task=decoder_lang_model_task,
-                          )
+        dataset_valid,
+        steps_per_epoch
+    ) = get_dataset_train(
+        batch_size=train_opts['batch_size'],
+        train_split_ratio=train_opts['train_split_ratio'],
+        steps_per_epoch=train_opts['steps_per_epoch'],
+        model_name=train_opts['model_name'],
+        encoder_lang_model_task=train_opts['encoder_lang_model_task'],
+        decoder_lang_model_task=train_opts['decoder_lang_model_task'],
+        lang_model_opts=lang_model_opts,
+    )
 
     model = get_model(
-        model_name=train_config['model_name'],
+        model_name=train_opts['model_name'],
         train_opts=train_opts,
-        model_opts=model_opts,
-        encoder_lang_config=encoder_lang_config,
-        decoder_lang_config=decoder_lang_config,
+        seq_model_opts=seq_model_opts,
+        encoder_lang_config=lang_model_opts[train_opts['encoder_lang_model_task']],
+        decoder_lang_config=lang_model_opts[train_opts['decoder_lang_model_task']],
     )
 
     print("#### Model Loaded ####")
 
     history = model.fit(
         dataset_train,
-        epochs=train_config['epochs'],
+        epochs=train_opts['epochs'],
         callbacks=[checkpoint_callback],
         verbose=1,
-        steps_per_epoch=train_config['steps_per_epoch'],
+        steps_per_epoch=train_opts['steps_per_epoch'],
         shuffle=True,
         validation_data=dataset_valid,
-        validation_steps=train_config['steps_per_epoch']
+        validation_steps=train_opts['steps_per_epoch']
     )
 
 
