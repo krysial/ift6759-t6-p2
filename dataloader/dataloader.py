@@ -18,15 +18,13 @@ def get_transformer_dataset(batch_size, dataset='train'):
         tokenize_type=token_type,
         add_start=False,
         add_end=False,
-        padding_value=0,
         padding='post'
     )
 
     en_id2v, en_v2id, en_lines = data.preprocessing(
         os.path.join(dataset_path, ALIGNED_UNFORMATTED_ENG),
         tokenize_type=token_type,
-        padding='post',
-        padding_value=0
+        padding='post'
     )
 
     fr_max_seq_len = fr_lines.shape[1]
