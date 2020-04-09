@@ -11,7 +11,7 @@ Loss = tf.keras.losses.SparseCategoricalCrossentropy(
 class seq_2_seq_GRU(tf.keras.Model):
     def __init__(self, vocab_inp_size, encoder_embedding_dim, encoder_units,
                  vocab_tar_size, decoder_embedding_dim, decoder_units,
-                 decoder_v2id, targ_seq_len, BATCH_SIZE,
+                 decoder_v2id, targ_seq_len,
                  encoder_lang_model=None, decoder_lang_model=None):
 
         super(seq_2_seq_GRU, self).__init__()
@@ -19,33 +19,31 @@ class seq_2_seq_GRU(tf.keras.Model):
         self.encoder = Encoder_GRU(vocab_size=vocab_inp_size,
                                    embedding_dim=encoder_embedding_dim,
                                    enc_units=encoder_units,
-                                   batch_sz=BATCH_SIZE,
                                    lang_model=encoder_lang_model)
         self.decoder = Decoder_GRU(vocab_size=vocab_tar_size,
                                    embedding_dim=decoder_embedding_dim,
                                    dec_units=decoder_units,
-                                   batch_sz=BATCH_SIZE,
                                    lang_model=decoder_lang_model)
         self.v2id = decoder_v2id
         self.targ_seq_len = targ_seq_len
-        self.BATCH_SIZE = BATCH_SIZE
 
     # @tf.function(experimental_compile=True)
     def call(self, tup, targ=None, training=False):
 
         inp, targ = tup
 
-        enc_hidden = self.encoder.initialize_hidden_state(self.BATCH_SIZE)
+        BATCH_SIZE = inp.shape[0]
+        enc_hidden = self.encoder.initialize_hidden_state(BATCH_SIZE)
 
         enc_output, enc_hidden = self.encoder(inp, enc_hidden)
         dec_hidden = enc_hidden
 
-        dec_input = tf.expand_dims([self.v2id['<SOS>']] * self.BATCH_SIZE, 1)
+        dec_input = tf.expand_dims([self.v2id['<SOS>']] * BATCH_SIZE, 1)
 
         Predictions = []
         Predictions.append(
             tf.one_hot(
-                [self.v2id['<SOS>']] * self.BATCH_SIZE, len(self.v2id),
+                [self.v2id['<SOS>']] * BATCH_SIZE, len(self.v2id),
                 dtype=tf.float32
             )
         )
