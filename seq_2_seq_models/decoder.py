@@ -5,9 +5,8 @@ from language_models.language_model import Loss
 
 class Decoder_GRU(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim,
-                 dec_units, batch_sz, lang_model=None):
+                 dec_units, lang_model=None):
         super(Decoder_GRU, self).__init__()
-        self.batch_sz = batch_sz
         self.dec_units = dec_units
 
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
