@@ -56,12 +56,12 @@ def get_model_GRU(model_name, seq_model_opts,
 
     seq_model_opts['encoder_config']['lang_model_checkpointer'] = os.path.join(
         "language_models", train_opts['encoder_lang_model_task'],
-        model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
+        model_name + "_{}.h5".format(seq_model_opts['encoder_config']['checkpoint_epoch'])
     )
 
     seq_model_opts['decoder_config']['lang_model_checkpointer'] = os.path.join(
         "language_models", train_opts['decoder_lang_model_task'],
-        model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
+        model_name + "_{}.h5".format(seq_model_opts['decoder_config']['checkpoint_epoch'])
     )
 
     GRU_seq_2_seq = seq_2_seq_GRU(
