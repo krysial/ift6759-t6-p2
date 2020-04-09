@@ -209,6 +209,46 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
         _ = [print(f"({i+1})", D) for i, D in enumerate(dec_data)]
 
 
+def oversample(data_1, data_2, n):
+    """
+    Randomly samples from a pair of aligned datasets with replacement.
+
+    Arguments:
+        data_1: string or list of sentences. First dataset.
+        data_2: string or list of sentences. Second dataset.
+        n: integer or float. If integer: number of samples. If float: number of samples relative to input dataset size.
+    
+    Returns:
+        Two lists of sampled sentences.
+    """
+
+    # Read lines from datasets
+    lines_1 = checkout_data(data_1)
+    lines_2 = checkout_data(data_2)
+    assert len(lines_1) == len(lines_2), 'Oversampled datasets should contain the same number of sentences.'
+
+    # Initialize variables
+    samples_1 = []
+    samples_2 = []
+    length = len(lines_1)
+
+    # If n is an integer, randomly sample until n is reached
+    if isinstance(n, int):
+        for _ in range(n):
+            sample = np.random.randint(length)
+            samples_1.append(lines_1[sample])
+            samples_2.append(lines_2[sample])
+
+    # If n is a float, randomly sample until len(lines_1)*n is reached
+    if isinstance(n, float):
+        while len(samples_1) < len(lines_1) * n:
+            sample = np.random.randint(length)
+            samples_1.append(lines_1[sample])
+            samples_2.append(lines_2[sample])
+
+    return samples_1, samples_2
+
+
 # DATA UTILS:
 
 def handle_punctuation(lines):
