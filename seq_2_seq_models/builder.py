@@ -52,16 +52,15 @@ def get_model_Transformer(model_name, seq_model_opts,
 
 
 def get_model_GRU(model_name, seq_model_opts,
-                  encoder_lang_config, decoder_lang_config,
-                  ):
+                  encoder_lang_config, decoder_lang_config):
 
     seq_model_opts['encoder_config']['lang_model_checkpointer'] = os.path.join(
-        "language_models", seq_model_opts['encoder_lang_model_task'],
+        "language_models", train_opts['encoder_lang_model_task'],
         model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
     )
 
     seq_model_opts['decoder_config']['lang_model_checkpointer'] = os.path.join(
-        "language_models", seq_model_opts['decoder_lang_model_task'],
+        "language_models", train_opts['decoder_lang_model_task'],
         model_name + "_{}.h5".format(seq_model_opts['checkpoint_epoch'])
     )
 
