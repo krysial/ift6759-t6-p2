@@ -260,7 +260,7 @@ def handle_vocab(lines, tokenize_type, vocab_size):
     if tokenize_type == "c":
         corpus = list(' '.join(lines))
     # Get most common words
-    vocab = Counter(corpus).most_common(vocab_size) + \
+    vocab = [('<PAD>', 0)] + Counter(corpus).most_common(vocab_size) + \
         [('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0)]
     # Create id to vocabulary dictionary
     id2v = dict(pd.DataFrame(vocab, columns=['tokens', 'count'])['tokens'])
@@ -307,12 +307,7 @@ def handle_oov(token, v2id, fasttext_model, num_similar=10, threshold=0.5):
 
 
 def handle_padding(lines, padding, max_seq, v2id):
-    if padding == 'pre':
-        padder = '<SOS>'
-    elif padding == 'post':
-        padder = '<EOS>'
-    encoded_lines = pad_sequences(
-        lines, maxlen=max_seq, padding=padding, value=v2id[padder])
+    encoded_lines = pad_sequences(lines, maxlen=max_seq, padding=padding, value=v2id['<PAD>'])
     return encoded_lines
 
 
