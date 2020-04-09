@@ -1,0 +1,9 @@
+{
+  "lr": 0.001,
+  "dr": 0.1,
+  "batch_size": 64,
+  "epochs": 10,
+  "steps_per_epoch": null,
+  "train_split_ratio": 0.2,
+  "model_name": "Transformer"
+}
