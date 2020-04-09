@@ -45,7 +45,6 @@ def get_dataset_train(encoder_lang_config,
                       train_split_ratio,
                       steps_per_epoch,
                       model_name,
-                      fasttext_model,
                       encoder_lang_model_task,
                       decoder_lang_model_task,
                       ):
@@ -141,7 +140,12 @@ def get_dataset_train(encoder_lang_config,
 
     ##########
 
-    return encoder_lang_config, decoder_lang_config, dataset_train, dataset_valid
+    return (
+        train_opts,  # = LOAD CONFIG/CONFIG.JSON
+        model_opts,  # = LOAD CONFIG/SEQ_2_SEQ_MODEL.JSON
+        dataset_train,
+        dataset_valid
+    )
 
 
 def get_dataset_eval():
