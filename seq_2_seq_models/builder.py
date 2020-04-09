@@ -1,4 +1,6 @@
 import tensorflow as tf
+from typing import SimpleNamespace
+
 from seq_2_seq_models.transformer.transformer import Transformer
 from seq_2_seq_models.seq_2_seq import seq_2_seq_GRU
 
@@ -43,7 +45,7 @@ def get_model_Transformer(model_name, model_opts,
         input_vocab_size=encoder_lang_config["vocab_size"],
         max_target_seq_len=decoder_lang_config["max_seq"],
         target_vocab_size=decoder_lang_config["vocab_size"],
-        opts=model_opts
+        opts=SimpleNamespace(**model_opts)
     )
 
     return transformer
