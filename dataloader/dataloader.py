@@ -1,46 +1,13 @@
-from utils import data
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
 
-ALIGNED_FORMATTED_FRENCH = 'aligned_formated_fr'
-ALIGNED_UNFORMATTED_ENG = 'aligned_unformated_en'
-
-
-def get_transformer_dataset(batch_size, dataset='train'):
-    token_type = 'w'
-    dataset_path = 'data/Train'
-
-    if dataset == 'val':
-        dataset_path = 'data/Valid'
-
-    fr_id2v, fr_v2id, fr_lines = data.preprocessing(
-        os.path.join(dataset_path, ALIGNED_FORMATTED_FRENCH),
-        tokenize_type=token_type,
-        add_start=False,
-        add_end=False,
-        padding='post'
-    )
-
-    en_id2v, en_v2id, en_lines = data.preprocessing(
-        os.path.join(dataset_path, ALIGNED_UNFORMATTED_ENG),
-        tokenize_type=token_type,
-        padding='post'
-    )
-
-    fr_max_seq_len = fr_lines.shape[1]
-    en_max_seq_len = en_lines.shape[1]
-
-    dataset = tf.data.Dataset.from_tensor_slices(
-        ((en_lines, fr_lines), fr_lines))  # adding targets to the inputs
-    dataset = dataset.batch(batch_size, drop_remainder=True)
-
-    return dataset, \
-        {'id2w': en_id2v, 'w2id': en_v2id, 'max_seq_len': en_max_seq_len},\
-        {'id2w': fr_id2v, 'w2id': fr_v2id, 'max_seq_len': fr_max_seq_len}
+from utils import data
+from utils.data import preprocess_v2id
 
 
 def get_dataset_train(
-    BATCH_SIZE,
+    batch_size,
     train_split_ratio,
     steps_per_epoch,
     model_name,
@@ -103,7 +70,7 @@ def get_dataset_train(
     BUFFER_SIZE = len(input_tensor_train)
 
     if steps_per_epoch is None:
-        steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
+        steps_per_epoch = len(input_tensor_train)//batch_size
 
     lang_model_opts[encoder_lang_model_task]['max_seq'] = encoder_dataset.shape[-1]
     lang_model_opts[decoder_lang_model_task]['max_seq'] = decoder_dataset.shape[-1]
@@ -123,14 +90,14 @@ def get_dataset_train(
         ((input_tensor_train, target_tensor_train), target_tensor_train)
     ).shuffle(BUFFER_SIZE)
     dataset_train = dataset_train.batch(
-        BATCH_SIZE,
+        batch_size,
         drop_remainder=True).repeat()
 
     dataset_valid = tf.data.Dataset.from_tensor_slices(
         ((input_tensor_valid, target_tensor_valid), target_tensor_valid)
     ).shuffle(BUFFER_SIZE)
     dataset_valid = dataset_valid.batch(
-        BATCH_SIZE, drop_remainder=True
+        batch_size, drop_remainder=True
     ).repeat()
 
     print("#### Datasets Loaded ####")
