@@ -21,7 +21,7 @@
 
 
   "Transformer":
-  {
+  {    
     "num_layers": 1,
     "atten_dim": 8,
     "num_heads": 2,
