@@ -50,11 +50,6 @@ def get_dataset_train(encoder_lang_config,
                       ):
     '''
 
-        Inputs:
-            encoder_lang_config
-            FILE:
-        Outputs:
-            Dataset
 
     '''
     # dataset
