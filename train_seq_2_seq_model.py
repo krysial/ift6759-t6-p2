@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
-from utils.data import preprocess_v2id
 from seq_2_seq_models.builder import get_model
+from dataloader.dataloader import get_dataset_train
 
 import tensorflow as tf
 import numpy as np
@@ -19,15 +19,26 @@ logging.disable(logging.CRITICAL)
 
 
 @click.command()
+@click.option('--encoder_lang_model_task', default=None)
+@click.option('--decoder_lang_model_task', default=None)
+@click.option('--batch_size', default=None)
+@click.option('--epochs', default=None)
+@click.option('--lr', default=None)
+@click.option('--dr', default=None)
+@click.option('--enc_checkpoint_epoch', default=None)
+@click.option('--dec_checkpoint_epoch', default=None)
+@click.option('--train_split_ratio', default=None)
+@click.option('--steps_per_epoch', default=None)
+@click.option('--model_name', default=None)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
 @click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
 @click.option('--train_opts_path', default='config/train_config.json')
 def train(
+    encoder_lang_model_task, decoder_lang_model_task,
+    batch_size, epochs, lr, dr, train_split_ratio, steps_per_epoch,
+    enc_checkpoint_epoch, dec_checkpoint_epoch, model_name,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
 ):
-
-    # lang_model_opts[encoder_lang_model_task] = encoder_lang_config = lang_model_opts[train_opts['encoder_lang_model_task']]
-    # lang_model_opts[decoder_lang_model_task] = decoder_lang_config = lang_model_opts[train_opts['decoder_lang_model_task']]
 
     with open(lang_model_opts_path, "r") as fd:
         lang_model_opts = json.load(fd)
@@ -35,9 +46,42 @@ def train(
     with open(train_opts_path, "r") as fd:
         train_opts = json.load(fd)
 
+    if model_name is not None:
+        train_opts['model_name'] = model_name
+
     with open(seq_model_opts_path, "r") as fd:
         seq_model_opts = json.load(fd)
         seq_model_opts = seq_model_opts[train_opts['model_name']]
+
+    if encoder_lang_model_task is not None:
+        train_opts['encoder_lang_model_task'] = encoder_lang_model_task
+
+    if decoder_lang_model_task is not None:
+        train_opts['decoder_lang_model_task'] = decoder_lang_model_task
+
+    if batch_size is not None:
+        train_opts['batch_size'] = batch_size
+
+    if epochs is not None:
+        train_opts['epochs'] = epochs
+
+    if lr is not None:
+        train_opts['lr'] = lr
+
+    if dr is not None:
+        train_opts['dr'] = dr
+
+    if enc_checkpoint_epoch is not None:
+        seq_model_opts['encoder_config']['enc_checkpoint_epoch'] = enc_checkpoint_epoch
+
+    if dec_checkpoint_epoch is not None:
+        seq_model_opts['decoder_config']['dec_checkpoint_epoch'] = dec_checkpoint_epoch
+
+    if train_split_ratio is not None:
+        train_opts['train_split_ratio'] = train_split_ratio
+
+    if steps_per_epoch is not None:
+        train_opts['steps_per_epoch'] = steps_per_epoch
 
     # Directory where the checkpoints will be saved
     checkpoint_dir = os.path.join(
