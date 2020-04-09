@@ -1,5 +1,5 @@
 import tensorflow as tf
-from typing import SimpleNamespace
+from types import SimpleNamespace
 
 from seq_2_seq_models.transformer.transformer import Transformer
 from seq_2_seq_models.seq_2_seq import seq_2_seq_GRU
