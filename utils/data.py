@@ -1,4 +1,5 @@
 from collections import Counter
+import re
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import pandas as pd
@@ -9,7 +10,7 @@ import gensim.models
 
 
 def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=True,
-                    add_end=True, remove_punctuation=True, lower=True,
+                    add_end=True, remove_punctuation=True, lower=True, regex=True,
                     tokenize_type="w", padding='post', post_process_usage=False):
     """
     Gets tokenized and integer encoded format of given
@@ -48,6 +49,10 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
     # Handle punctuations if required
     if remove_punctuation:
         lines = handle_punctuation(lines)
+    
+    # Apply regex constraints
+    if regex:
+        lines = handle_regex(lines)
 
     # Get v2id dicitionary
     if isinstance(v2id, str):
@@ -77,7 +82,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
 
 
 def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
-                  add_end=True, remove_punctuation=True, lower=True,
+                  add_end=True, remove_punctuation=True, lower=True, regex=True,
                   tokenize_type="w", padding='post', save_v2id_path=None):
     """
     Gets tokenized and integer encoded format of given text corpus.
@@ -120,6 +125,10 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     # Handle punctuations if required
     if remove_punctuation:
         lines = handle_punctuation(lines)
+
+    # Apply regex constraints
+    if regex:
+        lines = handle_regex(lines)
 
     # Get corpus tokens
     id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
@@ -219,6 +228,33 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
 
 # DATA UTILS:
+
+def handle_regex(lines):
+    # Uses regex to find uppercase, capitalized, numeric, and alphanumeric tokens
+    uppercase = re.compile(r'^[A-Z]+[A-Z]*$')
+    capitalized = re.compile(r'^[A-Z]')
+    numeric = re.compile(r'^[0-9]*$')
+    alphanumeric = re.compile(r'.*[0-9].*')
+
+    new_lines = [[] for _ in lines]
+
+    for idx, line in enumerate(lines):
+        line = line.split()
+        for word in line:
+            if numeric.match(word):
+                new_lines[idx].append('<NUM>')
+            elif alphanumeric.match(word):
+                new_lines[idx].append('<ALNUM>')
+            elif len(word) > 1 and uppercase.match(word):
+                new_lines[idx].extend(['<UPPER>', word.lower()])
+            elif len(word) > 1 and capitalized.match(word):
+                new_lines[idx].extend(['<CAP>', word.lower()])
+            else:
+                new_lines[idx].append(word)
+        new_lines[idx] = ' '.join(new_lines[idx])
+    
+    return new_lines
+
 
 def handle_punctuation(lines):
     # Symbols to be removed, from punctuation_remover.py
