@@ -5,9 +5,15 @@ import os
 import time
 
 
-Loss = tf.keras.losses.SparseCategoricalCrossentropy(
-    from_logits=True, reduction='none'
-)
+def Loss(real, pred):
+    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True, reduction='none')
+    targets_real = real[:, 1:]  # shift for targets real
+    mask = tf.math.logical_not(tf.math.equal(targets_real, 0))
+    loss_ = loss_object(targets_real, pred)
+    mask = tf.cast(mask, dtype=loss_.dtype)
+    loss_ *= mask
+    return tf.reduce_mean(loss_)/tf.reduce_sum(mask)
 
 
 class embedding_warmer(tf.keras.callbacks.Callback):
