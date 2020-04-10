@@ -113,5 +113,46 @@ def get_dataset_train(
     )
 
 
-def get_dataset_eval():
-    pass
+def get_dataset_eval(
+    encoder_file_path, encoder_lang_model_task,
+    lang_model_opts_path, seq_model_opts_path, train_opts_path
+):
+    '''
+
+
+    '''
+
+    lang_model_opts =
+    seq_model_opts =
+    train_opts =
+
+    _, encoder_dataset = preprocess_v2id(
+        data=os.path.join(encoder_file_path),
+        v2id=os.path.join(
+            os.getcwd(),
+            "language_models",
+            encoder_lang_model_task,
+            "v2id.json"
+        ),
+        tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
+        max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
+        remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
+        fasttext_model=lang_model_opts[encoder_lang_model_task]['fasttext_model'],
+    )
+
+    lang_model_opts[encoder_lang_model_task]['max_seq'] = encoder_dataset.shape[-1]
+
+    print("#### ENC-DEC DATA Preprocessed ####")
+
+    dataset = tf.data.Dataset.from_tensor_slices(
+        ((input_tensor_train, _))
+    )
+
+    print("#### Datasets Loaded ####")
+
+    return (
+        lang_model_opts,
+        seq_model_opts,
+        train_opts,
+        dataset
+    )
