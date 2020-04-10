@@ -7,7 +7,7 @@ import click
 import json
 from sklearn.model_selection import train_test_split
 
-from language_models.language_model import build_model, embedding_warmer, Loss
+from language_models.language_model import build_model, embedding_warmer, embedding_loader, Loss
 from utils.data import preprocessing
 
 
@@ -67,6 +67,20 @@ def train(task, config_path, train_config_path, units, lr, dr,
         tokenize_type,
         config['remove_punctuation']))
 
+    # dataset
+    id2v, v2id, train_dataset = preprocessing(
+        os.path.join(os.getcwd(), data_file),
+        tokenize_type=tokenize_type,
+        max_seq=config['max_seq'],
+        vocab_size=config['vocab_size'],
+        remove_punctuation=config['remove_punctuation'],
+        save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
+                                    "v2id.json")
+    )
+
+    config['vocab_size'] = len(id2v)
+    config['max_seq'] = train_dataset.shape[1]
+
     # Directory where the checkpoints will be saved
     checkpoint_dir = 'language_models/' + task
     checkpoint_prefix = os.path.join(
@@ -81,19 +95,8 @@ def train(task, config_path, train_config_path, units, lr, dr,
     embedding_warmer_callback = embedding_warmer(
         start_train_epoch=config['embedding_warmer_epoch'])
 
-    # dataset
-    id2v, v2id, train_dataset = preprocessing(
-        os.path.join(os.getcwd(), data_file),
-        tokenize_type=tokenize_type,
-        max_seq=config['max_seq'],
-        vocab_size=config['vocab_size'],
-        remove_punctuation=config['remove_punctuation'],
-        save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
-                                    "v2id.json")
-    )
-
-    config['vocab_size'] = len(id2v)
-    config['max_seq'] = train_dataset.shape[1]
+    embedding_loader_callback = embedding_loader(
+        fasttext_path=config['fasttext_model'], v2id=None, id2v=id2v)
 
     def split_input_target(chunk):
         input_text = chunk[:-1]
@@ -131,7 +134,8 @@ def train(task, config_path, train_config_path, units, lr, dr,
         history = model.fit(
             train_dataset,
             epochs=epochs,
-            callbacks=[checkpoint_callback, embedding_warmer_callback],
+            callbacks=[checkpoint_callback,
+                       embedding_warmer_callback, embedding_loader_callback],
             verbose=1,
             steps_per_epoch=steps_per_epoch,
             shuffle=True,
