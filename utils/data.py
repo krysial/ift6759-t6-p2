@@ -231,8 +231,8 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
 def handle_regex(lines):
     # Uses regex to find uppercase, capitalized, numeric, and alphanumeric tokens
-    uppercase = re.compile(r'^[A-Z]+[A-Z]*$')
-    capitalized = re.compile(r'^[A-Z]')
+    uppercase = re.compile(r'^[À-ÜA-Z]+[À-ÜA-Z]*$')
+    capitalized = re.compile(r'^[À-ÜA-Z]')
     numeric = re.compile(r'^[0-9]*$')
     alphanumeric = re.compile(r'.*[0-9].*')
 
