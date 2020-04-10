@@ -5,6 +5,7 @@ import os
 import time
 import click
 import json
+from sklearn.model_selection import train_test_split
 
 from language_models.language_model import build_model, embedding_warmer, Loss
 from utils.data import preprocessing
@@ -32,15 +33,16 @@ except ValueError:
 @click.option('--model_name', default='GRU')
 @click.option('--task', default="unformated_fr_w2w")
 @click.option('--batch_size', default=64)
+@click.option('--train_split_ratio', default=0.30)
 @click.option('--epochs', default=20)
 @click.option('--units', default=512)
 @click.option('--lr', default=0.001)
 @click.option('--dr', default=0.1)
 @click.option('--embedding_warmer_epoch', default=1)
 @click.option('--steps_per_epoch', default=500)
-def train(task, config_path, train_config_path, lr, dr,
-          batch_size, epochs, steps_per_epoch, units,
-          embedding_warmer_epoch, model_name):
+def train(task, config_path, train_config_path, units, lr, dr,
+          batch_size, epochs, steps_per_epoch, embedding_warmer_epoch,
+          model_name, train_split_ratio):
     with open(config_path, "r") as fd:
         config = json.load(fd)
 
@@ -54,6 +56,7 @@ def train(task, config_path, train_config_path, lr, dr,
     config['dr'] = dr
     config['steps_per_epoch'] = steps_per_epoch
     config['embedding_warmer_epoch'] = embedding_warmer_epoch
+    config['train_split_ratio'] = train_split_ratio
 
     data_file = "data/unaligned_" + task.split("_")[0] + "_" + \
         task.split("_")[1]
@@ -97,12 +100,20 @@ def train(task, config_path, train_config_path, lr, dr,
         target_text = chunk[1:]
         return input_text, target_text
 
+    (
+        train_dataset,
+        valid_dataset,
+    ) = train_test_split(train_dataset, test_size=config['train_split_ratio'])
+
     train_dataset = tf.data.Dataset.from_tensor_slices(train_dataset)
     train_dataset = train_dataset.map(split_input_target)
     train_dataset = train_dataset.shuffle(1000).batch(
-        batch_size,
-        drop_remainder=True
-    ).repeat()
+        batch_size, drop_remainder=True).repeat()
+
+    valid_dataset = tf.data.Dataset.from_tensor_slices(valid_dataset)
+    valid_dataset = valid_dataset.map(split_input_target)
+    valid_dataset = valid_dataset.shuffle(1000).batch(
+        batch_size, drop_remainder=True).repeat()
 
     # creating the model in the TPUStrategy scope means we will
     # train the model on the TPU
@@ -124,7 +135,7 @@ def train(task, config_path, train_config_path, lr, dr,
             verbose=1,
             steps_per_epoch=steps_per_epoch,
             shuffle=True,
-            validation_data=train_dataset,
+            validation_data=valid_dataset,
             validation_steps=steps_per_epoch
         )
 
