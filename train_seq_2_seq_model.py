@@ -32,7 +32,7 @@ logging.disable(logging.CRITICAL)
 @click.option('--model_name', default=None)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
 @click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
-@click.option('--train_opts_path', default='config/train_config.json')
+@click.option('--train_opts_path', default='config/train_seq_2_seq_config.json')
 def train(
     encoder_lang_model_task, decoder_lang_model_task,
     batch_size, epochs, lr, dr, train_split_ratio, steps_per_epoch,
