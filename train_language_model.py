@@ -6,7 +6,7 @@ import time
 import click
 import json
 
-from language_models.language_model import build_model, Loss
+from language_models.language_model import build_model, embedding_warmer, Loss
 from utils.data import preprocessing
 
 
@@ -32,6 +32,7 @@ except ValueError:
 @click.option('--config_path', default='config/language_models.json')
 @click.option('--batch_size', default=64)
 @click.option('--epochs', default=20)
+@click.option('--embedding_warmer_epoch', default=1)
 @click.option('--steps_per_epoch', default=500)
 @click.option('--model_name', default='GRU')
 def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
@@ -57,6 +58,9 @@ def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_prefix,
         save_weights_only=False)
+
+    embedding_warmer_callback = embedding_warmer(
+        start_train_epoch=embedding_warmer_epoch)
 
     # dataset
     id2v, v2id, train_dataset = preprocessing(
@@ -99,7 +103,7 @@ def train(task, config_path, batch_size, epochs, steps_per_epoch, model_name):
         history = model.fit(
             train_dataset,
             epochs=epochs,
-            callbacks=[checkpoint_callback],
+            callbacks=[checkpoint_callback, embedding_warmer_callback],
             verbose=1,
             steps_per_epoch=steps_per_epoch,
             shuffle=True,
