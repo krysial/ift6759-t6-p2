@@ -21,14 +21,14 @@ logging.disable(logging.CRITICAL)
 @click.command()
 @click.option('--encoder_lang_model_task', default=None)
 @click.option('--decoder_lang_model_task', default=None)
-@click.option('--batch_size', default=None)
-@click.option('--epochs', default=None)
-@click.option('--lr', default=None)
-@click.option('--dr', default=None)
-@click.option('--enc_checkpoint_epoch', default=None)
-@click.option('--dec_checkpoint_epoch', default=None)
-@click.option('--train_split_ratio', default=None)
-@click.option('--steps_per_epoch', default=None)
+@click.option('--batch_size', default=None, type=int)
+@click.option('--epochs', default=None, type=int)
+@click.option('--lr', default=None, type=float)
+@click.option('--dr', default=None, type=float)
+@click.option('--enc_checkpoint_epoch', default=None, type=int)
+@click.option('--dec_checkpoint_epoch', default=None, type=int)
+@click.option('--train_split_ratio', default=None, type=float)
+@click.option('--steps_per_epoch', default=None, type=int)
 @click.option('--model_name', default=None)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
 @click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
@@ -131,18 +131,18 @@ def train(
     ###########
 
     (
-        lang_model_opts,  # = LOAD CONFIG/LANGUAGE_MODELS.JSON
+        lang_model_opts,
+        train_opts,
+        seq_model_opts,
         dataset_train,
         dataset_valid,
-        steps_per_epoch
     ) = get_dataset_train(
-        batch_size=train_opts['batch_size'],
-        train_split_ratio=train_opts['train_split_ratio'],
-        steps_per_epoch=train_opts['steps_per_epoch'],
         model_name=train_opts['model_name'],
         encoder_lang_model_task=train_opts['encoder_lang_model_task'],
         decoder_lang_model_task=train_opts['decoder_lang_model_task'],
         lang_model_opts=lang_model_opts,
+        train_opts=train_opts,
+        seq_model_opts=seq_model_opts,
     )
 
     model = get_model(

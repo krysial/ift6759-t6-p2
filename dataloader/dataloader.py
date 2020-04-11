@@ -7,13 +7,12 @@ from utils.data import preprocess_v2id
 
 
 def get_dataset_train(
-    batch_size,
-    train_split_ratio,
-    steps_per_epoch,
     model_name,
     encoder_lang_model_task,
     decoder_lang_model_task,
-    lang_model_opts
+    lang_model_opts,
+    train_opts,
+    seq_model_opts,
 ):
     '''
 
@@ -63,6 +62,8 @@ def get_dataset_train(
         fasttext_model=lang_model_opts[decoder_lang_model_task]['fasttext_model'],
     )
 
+    seq_model_opts['decoder_v2id'] = decoder_v2id
+
     ##########
     # SPLIT TRAIN-VALID
     ##########
@@ -73,14 +74,15 @@ def get_dataset_train(
         target_tensor_train,
         target_tensor_valid
     ) = train_test_split(
-        encoder_dataset, decoder_dataset, test_size=train_split_ratio)
+        encoder_dataset, decoder_dataset, test_size=train_opts['train_split_ratio'])
 
     ##########
 
     BUFFER_SIZE = len(input_tensor_train)
 
-    if steps_per_epoch is None:
-        steps_per_epoch = len(input_tensor_train)//batch_size
+    if train_opts['steps_per_epoch'] is None:
+        train_opts['steps_per_epoch'] = len(
+            input_tensor_train)//train_opts['batch_size']
 
     lang_model_opts[encoder_lang_model_task]['max_seq'] = encoder_dataset.shape[-1]
     lang_model_opts[decoder_lang_model_task]['max_seq'] = decoder_dataset.shape[-1]
@@ -100,14 +102,14 @@ def get_dataset_train(
         ((input_tensor_train, target_tensor_train), target_tensor_train)
     ).shuffle(BUFFER_SIZE)
     dataset_train = dataset_train.batch(
-        batch_size,
+        train_opts['batch_size'],
         drop_remainder=True).repeat()
 
     dataset_valid = tf.data.Dataset.from_tensor_slices(
         ((input_tensor_valid, target_tensor_valid), target_tensor_valid)
     ).shuffle(BUFFER_SIZE)
     dataset_valid = dataset_valid.batch(
-        batch_size, drop_remainder=True
+        train_opts['batch_size'], drop_remainder=True
     ).repeat()
 
     print("#### Datasets Loaded ####")
@@ -117,9 +119,10 @@ def get_dataset_train(
 
     return (
         lang_model_opts,
+        train_opts,
+        seq_model_opts,
         dataset_train,
-        dataset_valid,
-        steps_per_epoch
+        dataset_valid
     )
 
 
@@ -132,9 +135,9 @@ def get_dataset_eval(
 
     '''
 
-    lang_model_opts =
-    seq_model_opts =
-    train_opts =
+    lang_model_opts = None
+    seq_model_opts = None
+    train_opts = None
 
     _, encoder_dataset = preprocess_v2id(
         data=os.path.join(encoder_file_path),
