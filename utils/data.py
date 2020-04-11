@@ -331,10 +331,9 @@ def handle_vocab(lines, tokenize_type, vocab_size):
         corpus = list(' '.join(lines))
     # Get most common words
     if vocab_size is not None:
-      vocab_size -= 8
-    vocab = [('<PAD>', 0)] + Counter(corpus).most_common(vocab_size) + \
-        [('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0), ('<NUM>', 0),
-         ('<ALNUM>', 0), ('<CAP>', 0), ('<UPPER>', 0)]
+        vocab_size -= 8
+    vocab = [('<PAD>', 0), ('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0), ('<NUM>', 0),
+             ('<ALNUM>', 0), ('<CAP>', 0), ('<UPPER>', 0)] + Counter(corpus).most_common(vocab_size)
     # Create id to vocabulary dictionary
     id2v = dict(pd.DataFrame(vocab, columns=['tokens', 'count'])['tokens'])
     v2id = swap_dict_key_value(id2v)
@@ -369,7 +368,10 @@ def handle_encoding_v2id(lines, v2id, fasttext_model=None):
 def handle_oov(token, v2id, fasttext_model, num_similar=10, threshold=0.5):
     if token in v2id:
         return v2id[token]
-    similar_words = fasttext_model.wv.similar_by_word(token, num_similar)
+    try:
+        similar_words = fasttext_model.wv.similar_by_word(token, num_similar)
+    except KeyError:
+        num_similar = 0
     for i in range(num_similar):
         w = similar_words[i]
         if w[1] < threshold:
