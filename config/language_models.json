@@ -4,27 +4,27 @@
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "units": 128
+        "fasttext_model":null
     },
     "unformated_fr_w2w": {
         "max_seq": 50,
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "units": 128
+        "fasttext_model":null
     },
     "unformated_fr_c2c": {
         "max_seq": null,
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 256,
-        "units": 1024
+        "fasttext_model":null
     },
     "formated_fr_c2c": {
         "max_seq": null,
         "vocab_size": null,
         "remove_punctuation": false,
         "embedding_dim": 256,
-        "units": 1024
+        "fasttext_model":null
     }
 }

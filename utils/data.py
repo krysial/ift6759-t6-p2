@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import json
 from tqdm import tqdm
+import gensim.models
 
 
 def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=True,
@@ -18,7 +19,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
         data: string or list. Path of input text file when string and
             data (batch of sentences expected) itself when List(list).
         v2id: string or dict, Mapping of vocabulary to integer encoding.
-        fasttext_model: str, default None. Fasttext Model reference
+        fasttext_model: str, default None. Fasttext Model path
         max_seq: int, default None. Sequence length to retain.
         add_start: boolean, default True.
             If True, adds start-of-sequence (<SOS>)
@@ -61,6 +62,10 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
     # If called by postprocessing, end function and return List(list(words))
     if post_process_usage:
         return lines
+
+    # Setup fasttext model from path
+    if fasttext_model is not None and isinstance(fasttext_model, str):
+        fasttext_model = gensim.models.FastText.load(fasttext_model)
 
     # Encode text data using v2id
     lines = handle_encoding_v2id(lines, v2id, fasttext_model)
@@ -153,7 +158,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
             sentence list. Else saves at given output path.
         token_type: 'w' or 'c', default is 'w'. 'w' represents word tokens & 'c'
             represents char tokens.
-        fasttext_model: str, default None. Fasttext Model reference
+        fasttext_model: str, default None. Fasttext Model path
         enc_data: string or list. Path of input text file when string and
             data (batch of sentences expected) itself when List(list).
         add_start: boolean, default True.
@@ -184,6 +189,10 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
     # Decode integer tokens to words/chars
     dec_data = decode_token_2_words(dec_data, id2v, tokenize_type)
+
+    # Setup fasttext model from path
+    if fasttext_model is not None and isinstance(fasttext_model, str):
+        fasttext_model = gensim.models.FastText.load(fasttext_model)
 
     # Replacing <UNK> by mapping <UNK> created at input to encoder
     if fasttext_model is not None and tokenize_type == 'w':
@@ -307,7 +316,8 @@ def handle_oov(token, v2id, fasttext_model, num_similar=10, threshold=0.5):
 
 
 def handle_padding(lines, padding, max_seq, v2id):
-    encoded_lines = pad_sequences(lines, maxlen=max_seq, padding=padding, value=v2id['<PAD>'])
+    encoded_lines = pad_sequences(
+        lines, maxlen=max_seq, padding=padding, value=v2id['<PAD>'])
     return encoded_lines
 
 

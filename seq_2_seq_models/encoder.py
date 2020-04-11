@@ -5,9 +5,8 @@ from language_models.language_model import Loss
 
 class Encoder_GRU(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, enc_units,
-                 batch_sz, lang_model=None):
+                 lang_model=None):
         super(Encoder_GRU, self).__init__()
-        self.batch_sz = batch_sz
         self.enc_units = enc_units
 
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
