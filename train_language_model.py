@@ -35,7 +35,7 @@ except ValueError:
 @click.option('--batch_size', default=64)
 @click.option('--train_split_ratio', default=0.30)
 @click.option('--epochs', default=20)
-@click.option('--units', default=256)
+@click.option('--units', default=128)
 @click.option('--lr', default=0.001)
 @click.option('--dr', default=0.1)
 @click.option('--embedding_warmer_epoch', default=1)
