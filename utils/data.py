@@ -330,7 +330,9 @@ def handle_vocab(lines, tokenize_type, vocab_size):
     if tokenize_type == "c":
         corpus = list(' '.join(lines))
     # Get most common words
-    vocab = [('<PAD>', 0)] + Counter(corpus).most_common(vocab_size-8) + \
+    if vocab_size is not None:
+      vocab_size -= 8
+    vocab = [('<PAD>', 0)] + Counter(corpus).most_common(vocab_size) + \
         [('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0), ('<NUM>', 0),
          ('<ALNUM>', 0), ('<CAP>', 0), ('<UPPER>', 0)]
     # Create id to vocabulary dictionary
