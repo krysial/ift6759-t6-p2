@@ -4,27 +4,47 @@
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "fasttext_model":null
+        "fasttext_model":null,
+        "CAP":true,
+        "UPPER":true,
+        "NUM":true,
+        "ALNUM":true,
+        "lower":false
     },
     "unformated_fr_w2w": {
         "max_seq": 50,
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "fasttext_model":null
+        "fasttext_model":null,
+        "CAP":true,
+        "UPPER":true,
+        "NUM":true,
+        "ALNUM":true,
+        "lower":false
     },
     "unformated_fr_c2c": {
         "max_seq": null,
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 256,
-        "fasttext_model":null
+        "fasttext_model":null,
+        "CAP":false,
+        "UPPER":false,
+        "NUM":false,
+        "ALNUM":false,
+        "lower":false
     },
     "formated_fr_c2c": {
         "max_seq": null,
         "vocab_size": null,
         "remove_punctuation": false,
         "embedding_dim": 256,
-        "fasttext_model":null
+        "fasttext_model":null,
+        "CAP":false,
+        "UPPER":false,
+        "NUM":false,
+        "ALNUM":false,
+        "lower":false
     }
 }
