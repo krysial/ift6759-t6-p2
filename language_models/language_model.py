@@ -7,15 +7,14 @@ from utils.gensim_embeddings import load_and_create
 from utils.data import swap_dict_key_value
 
 
-def Loss(real, pred):
+def Loss(targets_real, pred):
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
         from_logits=True, reduction='none')
-    targets_real = real[:, 1:]  # shift for targets real
     mask = tf.math.logical_not(tf.math.equal(targets_real, 0))
     loss_ = loss_object(targets_real, pred)
     mask = tf.cast(mask, dtype=loss_.dtype)
     loss_ *= mask
-    return tf.reduce_mean(loss_)/tf.reduce_sum(mask)
+    return tf.reduce_mean(loss_)
 
 
 class embedding_warmer(tf.keras.callbacks.Callback):

@@ -2,7 +2,7 @@ import numpy as np
 from gensim import utils
 import gensim.models
 
-from data import preprocessing
+from utils.data import preprocessing
 
 
 # Iterator that yields sentences given a text file
