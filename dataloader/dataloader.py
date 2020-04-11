@@ -35,6 +35,11 @@ def get_dataset_train(
         tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
+        lower=lang_model_opts[encoder_lang_model_task]['lower'],
+        CAP=lang_model_opts[encoder_lang_model_task]['CAP'],
+        NUM=lang_model_opts[encoder_lang_model_task]['NUM'],
+        ALNUM=lang_model_opts[encoder_lang_model_task]['ALNUM'],
+        UPPER=lang_model_opts[encoder_lang_model_task]['UPPER'],
         fasttext_model=lang_model_opts[encoder_lang_model_task]['fasttext_model'],
     )
 
@@ -50,6 +55,11 @@ def get_dataset_train(
         tokenize_type=lang_model_opts[decoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[decoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[decoder_lang_model_task]['remove_punctuation'],
+        lower=lang_model_opts[decoder_lang_model_task]['lower'],
+        CAP=lang_model_opts[decoder_lang_model_task]['CAP'],
+        NUM=lang_model_opts[decoder_lang_model_task]['NUM'],
+        ALNUM=lang_model_opts[decoder_lang_model_task]['ALNUM'],
+        UPPER=lang_model_opts[decoder_lang_model_task]['UPPER'],
         fasttext_model=lang_model_opts[decoder_lang_model_task]['fasttext_model'],
     )
 
@@ -137,6 +147,11 @@ def get_dataset_eval(
         tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
+        lower=lang_model_opts[encoder_lang_model_task]['lower'],
+        CAP=lang_model_opts[encoder_lang_model_task]['CAP'],
+        NUM=lang_model_opts[encoder_lang_model_task]['NUM'],
+        ALNUM=lang_model_opts[encoder_lang_model_task]['ALNUM'],
+        UPPER=lang_model_opts[encoder_lang_model_task]['UPPER'],
         fasttext_model=lang_model_opts[encoder_lang_model_task]['fasttext_model'],
     )
 

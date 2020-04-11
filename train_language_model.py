@@ -40,9 +40,9 @@ except ValueError:
 @click.option('--dr', default=0.1)
 @click.option('--embedding_warmer_epoch', default=1)
 @click.option('--steps_per_epoch', default=500)
-def train(task, config_path, train_config_path, units, lr, dr,
+def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
           batch_size, epochs, steps_per_epoch, embedding_warmer_epoch,
-          model_name, train_split_ratio):
+          ):
     with open(config_path, "r") as fd:
         config = json.load(fd)
 
@@ -67,20 +67,6 @@ def train(task, config_path, train_config_path, units, lr, dr,
         tokenize_type,
         config['remove_punctuation']))
 
-    # dataset
-    id2v, v2id, train_dataset = preprocessing(
-        os.path.join(os.getcwd(), data_file),
-        tokenize_type=tokenize_type,
-        max_seq=config['max_seq'],
-        vocab_size=config['vocab_size'],
-        remove_punctuation=config['remove_punctuation'],
-        save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
-                                    "v2id.json")
-    )
-
-    config['vocab_size'] = len(id2v)
-    config['max_seq'] = train_dataset.shape[1]
-
     # Directory where the checkpoints will be saved
     checkpoint_dir = 'language_models/' + task
     checkpoint_prefix = os.path.join(
@@ -88,6 +74,27 @@ def train(task, config_path, train_config_path, units, lr, dr,
         checkpoint_dir,
         model_name + "_{epoch}.h5"
     )
+
+    # dataset
+    id2v, v2id, train_dataset = preprocessing(
+        os.path.join(os.getcwd(), data_file),
+        tokenize_type=tokenize_type,
+        max_seq=config['max_seq'],
+        vocab_size=config['vocab_size'],
+        remove_punctuation=config['remove_punctuation'],
+        lower=config['lower'],
+        CAP=config['CAP'],
+        NUM=config['NUM'],
+        ALNUM=config['ALNUM'],
+        UPPER=config['UPPER'],
+        save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
+                                    "v2id.json")
+    )
+
+    config['vocab_size'] = len(id2v)
+    config['max_seq'] = train_dataset.shape[1]
+
+    # Callbacks
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_prefix,
         save_weights_only=False)
