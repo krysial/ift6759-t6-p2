@@ -210,7 +210,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
 def oversample(data_1, data_2, n):
     """
-    Randomly samples from a pair of aligned datasets with replacement.
+    Randomly samples from a pair of aligned datasets with replacement. Implementation of increasing sampling by sampling
 
     Arguments:
         data_1: string or list of sentences. First dataset.
