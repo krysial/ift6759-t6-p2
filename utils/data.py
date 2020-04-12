@@ -1,14 +1,17 @@
 from collections import Counter
+import re
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import pandas as pd
 import numpy as np
 import json
 from tqdm import tqdm
+import gensim.models
 
 
 def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=True,
                     add_end=True, remove_punctuation=True, lower=True,
+                    CAP=False, NUM=False, ALNUM=False, UPPER=False,
                     tokenize_type="w", padding='post', post_process_usage=False):
     """
     Gets tokenized and integer encoded format of given
@@ -18,7 +21,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
         data: string or list. Path of input text file when string and
             data (batch of sentences expected) itself when List(list).
         v2id: string or dict, Mapping of vocabulary to integer encoding.
-        fasttext_model: str, default None. Fasttext Model reference
+        fasttext_model: str, default None. Fasttext Model path
         max_seq: int, default None. Sequence length to retain.
         add_start: boolean, default True.
             If True, adds start-of-sequence (<SOS>)
@@ -26,6 +29,11 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
             If True, adds end-of-sequence (<EOS>) tokens.
         remove_punctuation: boolean, default True.
             If True, removes punctuation symbols.
+        lower: boolean, default True. To condition case folding.
+        CAP: boolean, default False. To condition special token <CAP>
+        NUM: boolean, default False. To condition special token <NUM>
+        ALNUM: boolean, default False. To condition special token <ALNUM>
+        UPPER: boolean, default False. To condition special token <UPPER>
         tokenize_type: "w" or "c", default "w".
             Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
@@ -48,6 +56,10 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
     if remove_punctuation:
         lines = handle_punctuation(lines)
 
+    # Apply regex constraints
+    if CAP or NUM or ALNUM or UPPER:
+        lines = handle_regex(lines, CAP=CAP, NUM=NUM, ALNUM=ALNUM, UPPER=UPPER)
+
     # Get v2id dicitionary
     if isinstance(v2id, str):
         v2id = load_json(v2id)
@@ -62,6 +74,10 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
     if post_process_usage:
         return lines
 
+    # Setup fasttext model from path
+    if fasttext_model is not None and isinstance(fasttext_model, str):
+        fasttext_model = gensim.models.FastText.load(fasttext_model)
+
     # Encode text data using v2id
     lines = handle_encoding_v2id(lines, v2id, fasttext_model)
 
@@ -73,6 +89,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
 
 def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
                   add_end=True, remove_punctuation=True, lower=True,
+                  CAP=False, NUM=False, ALNUM=False, UPPER=False,
                   tokenize_type="w", padding='post', save_v2id_path=None):
     """
     Gets tokenized and integer encoded format of given text corpus.
@@ -90,6 +107,10 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
         remove_punctuation: boolean, default True.
             If True, removes punctuation symbols.
         lower: boolean, default True. To condition case folding.
+        CAP: boolean, default False. To condition special token <CAP>
+        NUM: boolean, default False. To condition special token <NUM>
+        ALNUM: boolean, default False. To condition special token <ALNUM>
+        UPPER: boolean, default False. To condition special token <UPPER>        
         tokenize_type: "w" or "c", default "w".
             Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
@@ -116,6 +137,10 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     if remove_punctuation:
         lines = handle_punctuation(lines)
 
+    # Apply regex constraints
+    if CAP or NUM or ALNUM or UPPER:
+        lines = handle_regex(lines, CAP=CAP, NUM=NUM, ALNUM=ALNUM, UPPER=UPPER)
+
     # Get corpus tokens
     id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
 
@@ -140,7 +165,8 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 
 def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type='w',
                    fasttext_model=None, enc_data=None, add_start=True, add_end=True,
-                   remove_punctuation=True, lower=True, enc_v2id=None):
+                   remove_punctuation=True, lower=True, enc_v2id=None,
+                   CAP=False, NUM=False, ALNUM=False, UPPER=False):
     """
     Decodes given integer token lists to text corpus using given 
     v2id or id2v mapping.
@@ -153,7 +179,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
             sentence list. Else saves at given output path.
         token_type: 'w' or 'c', default is 'w'. 'w' represents word tokens & 'c'
             represents char tokens.
-        fasttext_model: str, default None. Fasttext Model reference
+        fasttext_model: str, default None. Fasttext Model path
         enc_data: string or list. Path of input text file when string and
             data (batch of sentences expected) itself when List(list).
         add_start: boolean, default True.
@@ -172,9 +198,13 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     # Get given dec_data in 2D numpy array format
     dec_data = chekout_predictions(dec_data)
 
-    # Get v2id dicitionary
-    if isinstance(v2id, str):
-        v2id = load_json(v2id)
+    # Get v2id and id2v dicitionary
+    if isinstance(enc_v2id, str):
+        enc_v2id = load_json(enc_v2id)
+    if isinstance(dec_v2id, str):
+        dec_v2id = load_json(dec_v2id)
+    if dec_id2v is None:
+        dec_id2v = swap_dict_key_value(dec_v2id)
 
     # Now dec_data is in format list(List)
     dec_data = clear_after_eos(dec_data, dec_v2id)
@@ -183,19 +213,28 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     dec_data = remove_padding(dec_data, dec_v2id)
 
     # Decode integer tokens to words/chars
-    dec_data = decode_token_2_words(dec_data, id2v, tokenize_type)
+    dec_data = decode_token_2_words(dec_data, dec_id2v, tokenize_type)
+
+    # Setup fasttext model from path
+    if fasttext_model is not None and isinstance(fasttext_model, str):
+        fasttext_model = gensim.models.FastText.load(fasttext_model)
 
     # Replacing <UNK> by mapping <UNK> created at input to encoder
     if fasttext_model is not None and tokenize_type == 'w':
         # Get enc_data in format List(list(words))
-        enc_data = preprocessing(data=enc_data,
-                                 v2id=enc_v2id,
-                                 add_start=add_start,
-                                 add_end=add_end,
-                                 remove_punctuation=remove_punctuation,
-                                 lower=lower,
-                                 tokenize_type=tokenize_type,
-                                 post_process_usage=True)
+
+        enc_data = preprocess_v2id(data=enc_data,
+                                   v2id=enc_v2id,
+                                   add_start=add_start,
+                                   add_end=add_end,
+                                   remove_punctuation=remove_punctuation,
+                                   lower=lower,
+                                   tokenize_type=tokenize_type,
+                                   post_process_usage=True,
+                                   CAP=False,
+                                   NUM=False,
+                                   ALNUM=False,
+                                   UPPER=False)
         # Map predicted <UNK> with word in input
         dec_data = deal_with_UNK_pred(dec_data, enc_data, enc_v2id, dec_v2id,
                                       fasttext_model)
@@ -210,6 +249,37 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
 
 # DATA UTILS:
+
+def handle_regex(lines, CAP, NUM, ALNUM, UPPER):
+    # Uses regex to find uppercase, capitalized, numeric, and alphanumeric tokens
+    uppercase = re.compile(r'^[À-ÜA-Z]+[À-ÜA-Z]*$')
+    capitalized = re.compile(r'^[À-ÜA-Z]')
+    numeric = re.compile(r'^[0-9]*$')
+    alphanumeric = re.compile(r'.*[0-9].*')
+
+    new_lines = [[] for _ in lines]
+
+    for idx, line in enumerate(lines):
+        line = line.split()
+        for word in line:
+            if numeric.match(word):
+                if NUM:
+                    new_lines[idx].append('<NUM>')
+            elif alphanumeric.match(word):
+                if ALNUM:
+                    new_lines[idx].append('<ALNUM>')
+            elif len(word) > 1 and uppercase.match(word):
+                if UPPER:
+                    new_lines[idx].extend(['<UPPER>', word.lower()])
+            elif len(word) > 1 and capitalized.match(word):
+                if CAP:
+                    new_lines[idx].extend(['<CAP>', word.lower()])
+            else:
+                new_lines[idx].append(word)
+        new_lines[idx] = ' '.join(new_lines[idx])
+
+    return new_lines
+
 
 def handle_punctuation(lines):
     # Symbols to be removed, from punctuation_remover.py
@@ -260,8 +330,10 @@ def handle_vocab(lines, tokenize_type, vocab_size):
     if tokenize_type == "c":
         corpus = list(' '.join(lines))
     # Get most common words
-    vocab = [('<PAD>', 0)] + Counter(corpus).most_common(vocab_size) + \
-        [('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0)]
+    if vocab_size is not None:
+        vocab_size -= 8
+    vocab = [('<PAD>', 0), ('<SOS>', 0), ('<EOS>', 0), ('<UNK>', 0), ('<NUM>', 0),
+             ('<ALNUM>', 0), ('<CAP>', 0), ('<UPPER>', 0)] + Counter(corpus).most_common(vocab_size)
     # Create id to vocabulary dictionary
     id2v = dict(pd.DataFrame(vocab, columns=['tokens', 'count'])['tokens'])
     v2id = swap_dict_key_value(id2v)
@@ -296,7 +368,10 @@ def handle_encoding_v2id(lines, v2id, fasttext_model=None):
 def handle_oov(token, v2id, fasttext_model, num_similar=10, threshold=0.5):
     if token in v2id:
         return v2id[token]
-    similar_words = fasttext_model.wv.similar_by_word(token, num_similar)
+    try:
+        similar_words = fasttext_model.wv.similar_by_word(token, num_similar)
+    except KeyError:
+        num_similar = 0
     for i in range(num_similar):
         w = similar_words[i]
         if w[1] < threshold:
@@ -307,7 +382,8 @@ def handle_oov(token, v2id, fasttext_model, num_similar=10, threshold=0.5):
 
 
 def handle_padding(lines, padding, max_seq, v2id):
-    encoded_lines = pad_sequences(lines, maxlen=max_seq, padding=padding, value=v2id['<PAD>'])
+    encoded_lines = pad_sequences(
+        lines, maxlen=max_seq, padding=padding, value=v2id['<PAD>'])
     return encoded_lines
 
 

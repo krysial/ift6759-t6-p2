@@ -1,0 +1,29 @@
+{
+
+  "GRU":
+  {
+    "encoder_config": 
+    {
+      "lang_model_checkpointer": null,
+      "units": 128,
+      "checkpoint_epoch": 2
+    },
+    "decoder_config": 
+    {
+      "lang_model_checkpointer": null,
+      "units": 128,
+      "checkpoint_epoch": 2
+    },
+    "decoder_v2id": {}
+  },
+
+
+  "Transformer":
+  {    
+    "num_layers": 1,
+    "atten_dim": 8,
+    "num_heads": 2,
+    "ff_dim": 64
+  }
+
+}

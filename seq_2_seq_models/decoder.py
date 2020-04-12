@@ -5,9 +5,8 @@ from language_models.language_model import Loss
 
 class Decoder_GRU(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim,
-                 dec_units, batch_sz, lang_model=None):
+                 dec_units, lang_model=None):
         super(Decoder_GRU, self).__init__()
-        self.batch_sz = batch_sz
         self.dec_units = dec_units
 
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
@@ -34,7 +33,8 @@ class Decoder_GRU(tf.keras.Model):
                     # self.fc = model.layers[i]
 
         # used for attention
-        self.attention = BahdanauAttention(self.dec_units)
+        self.attn_align_shape = 16
+        self.attention = BahdanauAttention(self.attn_align_shape)
 
         self.attention_fc = tf.keras.layers.Dense(self.dec_units)
 
