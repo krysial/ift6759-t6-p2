@@ -7,8 +7,7 @@ import click
 import json
 from sklearn.model_selection import train_test_split
 
-from language_models.language_model import build_model, \
-    embedding_warmer, embedding_loader, Loss
+from language_models.language_model import build_model, embedding_warmer, embedding_loader, Loss
 from utils.data import preprocessing
 
 

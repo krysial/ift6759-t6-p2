@@ -33,7 +33,8 @@ class Decoder_GRU(tf.keras.Model):
                     # self.fc = model.layers[i]
 
         # used for attention
-        self.attention = BahdanauAttention(self.dec_units)
+        self.attn_align_shape = 16
+        self.attention = BahdanauAttention(self.attn_align_shape)
 
         self.attention_fc = tf.keras.layers.Dense(self.dec_units)
 

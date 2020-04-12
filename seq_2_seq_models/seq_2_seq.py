@@ -3,7 +3,6 @@ import tensorflow as tf
 from seq_2_seq_models.encoder import Encoder_GRU
 from seq_2_seq_models.decoder import Decoder_GRU
 
-
 class seq_2_seq_GRU(tf.keras.Model):
     def __init__(self, vocab_inp_size, encoder_embedding_dim, encoder_units,
                  vocab_tar_size, decoder_embedding_dim, decoder_units,
@@ -25,6 +24,7 @@ class seq_2_seq_GRU(tf.keras.Model):
 
     # @tf.function(experimental_compile=True)
     def call(self, tup, targ=None, training=False):
+
         inp, targ = tup
 
         BATCH_SIZE = inp.shape[0]
@@ -51,10 +51,11 @@ class seq_2_seq_GRU(tf.keras.Model):
                 prediction, dec_hidden, _ = self.decoder(
                     dec_input, dec_hidden, enc_output, None
                 )
+
             else:
                 prediction, dec_hidden, _ = self.decoder(
                     dec_input, dec_hidden, enc_output, dec_hidden
-                )                
+                )
 
             Prediction = tf.argmax(prediction, -1)
             Predictions.append(prediction)

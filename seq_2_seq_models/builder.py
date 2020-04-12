@@ -6,7 +6,7 @@ from seq_2_seq_models.transformer.transformer import Transformer
 from seq_2_seq_models.seq_2_seq import seq_2_seq_GRU
 
 
-def loss_function(real, pred):
+def loss_function_GRU(real, pred):
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
         from_logits=True, reduction='none')
     targets_real = real[:, :]  # shift for targets real
@@ -14,7 +14,18 @@ def loss_function(real, pred):
     loss_ = loss_object(targets_real, pred)
     mask = tf.cast(mask, dtype=loss_.dtype)
     loss_ *= mask
-    return tf.reduce_mean(loss_)  # /tf.reduce_sum(mask)
+    return tf.reduce_sum(loss_) / tf.reduce_sum(mask)
+
+
+def loss_function_Transformer(real, pred):
+    loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True, reduction='none')
+    targets_real = real[:, 1:]  # shift for targets real
+    mask = tf.math.logical_not(tf.math.equal(targets_real, 0))
+    loss_ = loss_object(targets_real, pred)
+    mask = tf.cast(mask, dtype=loss_.dtype)
+    loss_ *= mask
+    return tf.reduce_sum(loss_) / tf.reduce_sum(mask)
 
 
 def get_model(model_name, train_opts, seq_model_opts,
@@ -32,6 +43,11 @@ def get_model(model_name, train_opts, seq_model_opts,
         encoder_lang_config=encoder_lang_config,
         decoder_lang_config=decoder_lang_config,
     )
+
+    if model_name == "Transformer":
+        loss_function = loss_function_Transformer
+    elif model_name == "GRU":
+        loss_function = loss_function_GRU
 
     optimizer = tf.keras.optimizers.Adam(
         train_opts['lr'], beta_1=0.9, beta_2=0.98, epsilon=1e-9)
