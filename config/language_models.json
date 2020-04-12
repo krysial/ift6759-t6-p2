@@ -4,7 +4,7 @@
         "vocab_size": null,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "fasttext_model":"/content/drive/My Drive/ift6759/ift6759-t6-p2/embeddings/unformated_en_w2w/unaligned_unformated_en",
+        "fasttext_model":"embeddings/unformated_en_w2w/unaligned_unformated_en",
         "CAP":true,
         "UPPER":true,
         "NUM":true,
