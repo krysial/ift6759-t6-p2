@@ -58,12 +58,14 @@ def get_model(model_name, train_opts, seq_model_opts,
 
 def get_model_Transformer(model_name, seq_model_opts, train_opts,
                           encoder_lang_config, decoder_lang_config):
+    output_SOS_id = 1  # "<SOS>" : 1
 
     transformer = Transformer(
         max_input_seq_len=encoder_lang_config["max_seq"],
         input_vocab_size=encoder_lang_config["vocab_size"],
         max_target_seq_len=decoder_lang_config["max_seq"],
         target_vocab_size=decoder_lang_config["vocab_size"],
+        output_SOS_id=output_SOS_id,
         opts=SimpleNamespace(**seq_model_opts)
     )
 
