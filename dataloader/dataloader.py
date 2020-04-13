@@ -1,7 +1,6 @@
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
-import datetime
 import json
 
 from utils import data
@@ -24,6 +23,7 @@ def get_dataset_train(
     lang_model_opts,
     train_opts,
     seq_model_opts,
+    DT
 ):
     '''
 
@@ -136,8 +136,6 @@ def get_dataset_train(
         train_opts['encoder_lang_model_task'][-1] + "2" +
         train_opts['decoder_lang_model_task'][-1]
     )
-
-    DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
 
     def save_json(dt, data, config_name):
         path = generate_config_path(root_path, dt, config_name)

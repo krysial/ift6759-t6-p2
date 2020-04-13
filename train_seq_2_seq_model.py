@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 from seq_2_seq_models.builder import get_model
 from dataloader.dataloader import get_dataset_train
+from utils.checkpoint_callback import CheckpointCallback
 
 import tensorflow as tf
 import numpy as np
@@ -9,6 +10,7 @@ import time
 import click
 import json
 import logging
+import datetime
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -39,6 +41,7 @@ def train(
     enc_checkpoint_epoch, dec_checkpoint_epoch, model_name,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
 ):
+    DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
 
     with open(lang_model_opts_path, "r") as fd:
         lang_model_opts = json.load(fd)
@@ -95,14 +98,14 @@ def train(
     checkpoint_prefix = os.path.join(
         os.getcwd(),
         checkpoint_dir,
-        train_opts['model_name'] + "_{epoch}.h5"
+        train_opts['model_name'],
+        DT
     )
 
     # Mahmoud
-    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_prefix,
-        save_weights_only=False)
-    ###
+    checkpoint_callback = CheckpointCallback(
+        filepath=checkpoint_prefix
+    )
 
     ##########
     # ENCODER-DECODER LANG CONFIG
@@ -143,6 +146,7 @@ def train(
         lang_model_opts=lang_model_opts,
         train_opts=train_opts,
         seq_model_opts=seq_model_opts,
+        DT=DT
     )
 
     model = get_model(

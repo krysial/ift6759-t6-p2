@@ -3,6 +3,7 @@ import tensorflow as tf
 from seq_2_seq_models.encoder import Encoder_GRU
 from seq_2_seq_models.decoder import Decoder_GRU
 
+
 class seq_2_seq_GRU(tf.keras.Model):
     def __init__(self, vocab_inp_size, encoder_embedding_dim, encoder_units,
                  vocab_tar_size, decoder_embedding_dim, decoder_units,

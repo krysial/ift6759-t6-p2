@@ -47,6 +47,30 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
         ]
     )
 
+    # Directory where the checkpoints will be saved
+    checkpoint_dir = os.path.join(
+        os.getcwd(),
+        'seq_2_seq_models',
+        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
+        train_opts['decoder_lang_model_task'][:-4] + "_" +
+        train_opts['encoder_lang_model_task'][-1] + "2" +
+        train_opts['decoder_lang_model_task'][-1]
+    )
+    checkpoint_prefix = os.path.join(
+        os.getcwd(),
+        checkpoint_dir,
+        train_opts['model_name'] + '_{epoch}.h5'
+    )
+
+    ckpt = tf.train.Checkpoint(model=w_2_w_model,
+                               optimizer=w_2_w_model.optimizer)
+
+    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_prefix, max_to_keep=5)
+
+    # if a checkpoint exists, restore the latest checkpoint.
+    if ckpt_manager.latest_checkpoint:
+        ckpt.restore(ckpt_manager.latest_checkpoint)
+
     unformated_translation = tf.argmax(w_2_w_model.predict(dataset), axis=-1)
     processed_unformated_translation = postprocessing(
         dec_data=unformated_translation,
