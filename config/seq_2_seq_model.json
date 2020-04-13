@@ -14,7 +14,12 @@
       "units": 128,
       "checkpoint_epoch": 2
     },
-    "decoder_v2id": {}
+    "decoder_v2id": {},
+    "encoder_v2id": {},
+    "enc_embd_start_train_epoch": 1,
+    "dec_embd_start_train_epoch": 1,
+    "enc_gru_start_train_epoch": 1,
+    "dec_gru_start_train_epoch": 1
   },
 
 
@@ -23,7 +28,13 @@
     "num_layers": 1,
     "atten_dim": 8,
     "num_heads": 2,
-    "ff_dim": 64
+    "ff_dim": 64,
+    "decoder_v2id": {},
+    "encoder_v2id": {},
+    "enc_embd_start_train_epoch": 1,
+    "dec_embd_start_train_epoch": 1,
+    "enc_gru_start_train_epoch": 1,
+    "dec_gru_start_train_epoch": 1
   }
 
 }

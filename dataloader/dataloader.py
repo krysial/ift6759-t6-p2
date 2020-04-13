@@ -55,6 +55,7 @@ def get_dataset_train(
         fasttext_model=lang_model_opts[decoder_lang_model_task]['fasttext_model'],
     )
 
+    seq_model_opts['encoder_v2id'] = encoder_v2id
     seq_model_opts['decoder_v2id'] = decoder_v2id
 
     ##########
