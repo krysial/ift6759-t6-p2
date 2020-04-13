@@ -3,14 +3,19 @@ import datetime
 
 
 class CheckpointCallback(tf.keras.callbacks.Callback):
-    def on_train_batch_begin(self, batch, logs=None):
-        print('Training: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
+    def __init__(self, filepath):
+        super(CheckpointCallback, self).__init__()
+        self.filepath = filepath
 
-    def on_train_batch_end(self, batch, logs=None):
-        print('Training: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
+    def on_train_begin(self, logs=None):
+        self.ckpt = tf.train.Checkpoint(
+            model=self.model, optimizer=self.model.optimizer
+        )
+        self.ckpt_manager = tf.train.CheckpointManager(
+            self.ckpt,
+            self.filepath,
+            max_to_keep=5
+        )
 
-    def on_test_batch_begin(self, batch, logs=None):
-        print('Evaluating: batch {} begins at {}'.format(batch, datetime.datetime.now().time()))
-
-    def on_test_batch_end(self, batch, logs=None):
-        print('Evaluating: batch {} ends at {}'.format(batch, datetime.datetime.now().time()))
+    def on_epoch_end(self, epoch, logs=None):
+        self.ckpt_manager.save()
