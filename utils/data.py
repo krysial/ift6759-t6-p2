@@ -137,12 +137,12 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     if remove_punctuation:
         lines = handle_punctuation(lines)
 
+    # Get corpus tokens
+    id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
+
     # Apply regex constraints
     if CAP or NUM or ALNUM or UPPER:
         lines = handle_regex(lines, CAP=CAP, NUM=NUM, ALNUM=ALNUM, UPPER=UPPER)
-
-    # Get corpus tokens
-    id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
 
     # Get data as list(list(token))
     lines = handle_tokenizer(lines, tokenize_type)
@@ -236,6 +236,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
                                    ALNUM=False,
                                    UPPER=False)
         # Map predicted <UNK> with word in input
+        # deal with all special tokens except SOS EOS PAD
         dec_data = deal_with_UNK_pred(dec_data, enc_data, enc_v2id, dec_v2id,
                                       fasttext_model)
 
@@ -396,11 +397,14 @@ def handle_sos_eos(lines, add_start, add_end):
 
 
 def handle_encoding_v2id(lines, v2id, fasttext_model=None):
+
+    vocab2id = v2id.copy()
+
     if fasttext_model is not None:
-        encoded_lines = [[handle_oov(l, v2id, fasttext_model)
+        encoded_lines = [[handle_oov(l, vocab2id, fasttext_model)
                           for l in line] for line in tqdm(lines)]
     else:
-        encoded_lines = [[v2id.setdefault(l, v2id['<UNK>'])
+        encoded_lines = [[vocab2id.setdefault(l, vocab2id['<UNK>'])
                           for l in line] for line in tqdm(lines)]
     return encoded_lines
 
