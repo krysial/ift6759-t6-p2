@@ -78,7 +78,7 @@ class embedding_warmer(tf.keras.callbacks.Callback):
 
 class GRU_attn_warmer(tf.keras.callbacks.Callback):
     def __init__(self, enc_gru_start_train_epoch=1, dec_gru_start_train_epoch=1):
-        super(embedding_warmer, self).__init__()
+        super(GRU_attn_warmer, self).__init__()
         self.enc_gru_start_train_epoch = enc_gru_start_train_epoch
         self.dec_gru_start_train_epoch = dec_gru_start_train_epoch
 
