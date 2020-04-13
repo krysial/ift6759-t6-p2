@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import pandas as pd
 import numpy as np
+import os
 import json
 from tqdm import tqdm
 import gensim.models
@@ -168,7 +169,7 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 
     # Save v2id
     if save_v2id_path is not None:
-        save_v2id(v2id, path=save_v2id_path)
+        save_json(data=v2id, path=save_v2id_path)
 
     return id2v, v2id, lines
 
@@ -450,10 +451,10 @@ def handle_padding(lines, padding, max_seq, v2id):
     return encoded_lines
 
 
-def save_v2id(v2id, path):
+def save_json(data, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
-        json.dump(v2id, f)
-    print("\n# v2id dictionary saved at: {}".format(path))
+        json.dump(data, f)
 
 
 def load_json(path):

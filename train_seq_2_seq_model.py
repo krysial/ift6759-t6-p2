@@ -88,24 +88,16 @@ def train(
 
     # Directory where the checkpoints will be saved
     checkpoint_dir = os.path.join(
-        os.getcwd(),
         'seq_2_seq_models',
         train_opts['encoder_lang_model_task'][:-4] + "_2_" +
         train_opts['decoder_lang_model_task'][:-4] + "_" +
         train_opts['encoder_lang_model_task'][-1] + "2" +
-        train_opts['decoder_lang_model_task'][-1]
-    )
-    checkpoint_prefix = os.path.join(
-        os.getcwd(),
-        checkpoint_dir,
-        train_opts['model_name'],
-        DT
+        train_opts['decoder_lang_model_task'][-1],
+        train_opts['model_name'], DT
     )
 
-    # Mahmoud
-    checkpoint_callback = CheckpointCallback(
-        filepath=checkpoint_prefix
-    )
+    # Callbacks
+    checkpoint_callback = CheckpointCallback(filepath=checkpoint_dir)
 
     ##########
     # ENCODER-DECODER LANG CONFIG
