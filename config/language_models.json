@@ -1,10 +1,10 @@
 {
     "unformated_en_w2w": {
         "max_seq": null,
-        "vocab_size": null,
+        "vocab_size": 20000,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "fasttext_model":"embeddings/unformated_en_w2w/unaligned_unformated_en",
+        "fasttext_model":"embeddings/unformated_en_w2w/unaligned_unformated_en_128",
         "CAP":true,
         "UPPER":true,
         "NUM":true,
@@ -14,10 +14,10 @@
     },
     "unformated_fr_w2w": {
         "max_seq": null,
-        "vocab_size": null,
+        "vocab_size": 25000,
         "remove_punctuation": true,
         "embedding_dim": 128,
-        "fasttext_model":"embeddings/unformated_fr_w2w/unaligned_unformated_fr",
+        "fasttext_model":"embeddings/unformated_fr_w2w/unaligned_unformated_fr_128",
         "CAP":true,
         "UPPER":true,
         "NUM":true,
