@@ -120,9 +120,9 @@ def get_dataset_train(
     save_json(data=lang_model_opts,
               path=os.path.join(root_path, 'lang_model_opts.json'))
     save_json(data=train_opts,
-              path=os.path.join(root_path, 'train_opts'))
+              path=os.path.join(root_path, 'train_opts.json'))
     save_json(data=seq_model_opts,
-              path=os.path.join(root_path, 'seq_model_opts'))
+              path=os.path.join(root_path, 'seq_model_opts.json'))
 
     return (
         lang_model_opts,
@@ -152,9 +152,9 @@ def get_dataset_eval(
         model_name, DT, 'configs'
     )
 
-    lang_model_opts = load_json(os.path.join(root_path, 'lang_model_opts'))
-    seq_model_opts = load_json(os.path.join(root_path, 'seq_model_opts'))
-    train_opts = load_json(os.path.join(root_path, 'train_opts'))
+    lang_model_opts = load_json(os.path.join(root_path, 'lang_model_opts.json'))
+    seq_model_opts = load_json(os.path.join(root_path, 'seq_model_opts.json'))
+    train_opts = load_json(os.path.join(root_path, 'train_opts.json'))
 
     encoder_v2id, encoder_dataset = preprocess_v2id(
         data=encoder_file_path,
