@@ -168,10 +168,10 @@ def train(
         os.path.join(checkpoint_dir, DT + '.log'))
     callbacks.append(csv_logger_callback)
 
-    tb_path = os.path.join(root_dir, tensorboard, DT)
+    tb_path = os.path.join(root_dir, "tensorboard")
     os.makedirs(os.path.dirname(tb_path), exist_ok=True)
     tb_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=tb_path,
+        log_dir=os.path.join(tb_path, DT),
         histogram_freq=1,
         write_graph=True,
         write_images=True,

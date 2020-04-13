@@ -6,20 +6,20 @@
     {
       "lang_model_checkpointer": null,
       "units": 128,
-      "checkpoint_epoch": 2
+      "checkpoint_epoch": 2,
+      "enc_embd_start_train_epoch": 2,
+      "enc_gru_start_train_epoch": 2     
     },
     "decoder_config": 
     {
       "lang_model_checkpointer": null,
       "units": 128,
-      "checkpoint_epoch": 2
+      "checkpoint_epoch": 2,
+      "dec_embd_start_train_epoch": 2,
+      "dec_gru_start_train_epoch": 2
     },
     "decoder_v2id": {},
-    "encoder_v2id": {},
-    "enc_embd_start_train_epoch": 1,
-    "dec_embd_start_train_epoch": 1,
-    "enc_gru_start_train_epoch": 1,
-    "dec_gru_start_train_epoch": 1
+    "encoder_v2id": {}
   },
 
 
@@ -29,12 +29,18 @@
     "atten_dim": 8,
     "num_heads": 2,
     "ff_dim": 64,
+    "encoder_config":
+    {
+      "enc_embd_start_train_epoch": 2,      
+      "enc_gru_start_train_epoch": 2
+    },
+    "decoder_config":
+    {
+      "dec_embd_start_train_epoch": 2,
+      "dec_gru_start_train_epoch": 2      
+    },
     "decoder_v2id": {},
-    "encoder_v2id": {},
-    "enc_embd_start_train_epoch": 1,
-    "dec_embd_start_train_epoch": 1,
-    "enc_gru_start_train_epoch": 1,
-    "dec_gru_start_train_epoch": 1
+    "encoder_v2id": {}
   }
 
 }
