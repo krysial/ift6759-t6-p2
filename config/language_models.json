@@ -9,7 +9,8 @@
         "UPPER":true,
         "NUM":true,
         "ALNUM":true,
-        "lower":false
+        "lower":false,
+        "threshold":0.7
     },
     "unformated_fr_w2w": {
         "max_seq": null,
@@ -21,7 +22,8 @@
         "UPPER":true,
         "NUM":true,
         "ALNUM":true,
-        "lower":false
+        "lower":false,
+        "threshold":0.7
     },
     "unformated_fr_c2c": {
         "max_seq": null,
@@ -33,7 +35,8 @@
         "UPPER":false,
         "NUM":false,
         "ALNUM":false,
-        "lower":false
+        "lower":false,
+        "threshold":null
     },
     "formated_fr_c2c": {
         "max_seq": null,
@@ -45,6 +48,7 @@
         "UPPER":false,
         "NUM":false,
         "ALNUM":false,
-        "lower":false
+        "lower":false,
+        "threshold":null
     }
 }

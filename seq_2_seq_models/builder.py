@@ -64,7 +64,8 @@ def get_model_Transformer(model_name, seq_model_opts, train_opts,
         input_vocab_size=encoder_lang_config["vocab_size"],
         max_target_seq_len=decoder_lang_config["max_seq"],
         target_vocab_size=decoder_lang_config["vocab_size"],
-        opts=SimpleNamespace(**seq_model_opts)
+        output_SOS_id=seq_model_opts["decoder_v2id"]["<SOS>"],
+        opts=SimpleNamespace(**seq_model_opts),
     )
 
     return transformer
