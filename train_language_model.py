@@ -77,7 +77,7 @@ def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
 
     # dataset
     id2v, v2id, train_dataset = preprocessing(
-        os.path.join(os.getcwd(), data_file),
+        data=os.path.join(os.getcwd(), data_file),
         tokenize_type=tokenize_type,
         max_seq=config['max_seq'],
         vocab_size=config['vocab_size'],
@@ -88,7 +88,9 @@ def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
         ALNUM=config['ALNUM'],
         UPPER=config['UPPER'],
         save_v2id_path=os.path.join(os.getcwd(), checkpoint_dir,
-                                    "v2id.json")
+                                    "v2id.json"),
+        fasttext_model=config['fasttext_model'],
+        threshold=config['threshold']
     )
 
     config['vocab_size'] = len(id2v)
