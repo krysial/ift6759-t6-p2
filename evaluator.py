@@ -2,6 +2,11 @@ import argparse
 import subprocess
 import tempfile
 import os
+import tensorflow as tf
+
+from dataloader.dataloader import get_dataset_eval
+from seq_2_seq_models.builder import get_model
+from utils.data import postprocessing
 
 
 def generate_predictions(input_file_path: str, pred_file_path: str):
@@ -19,59 +24,122 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     Returns: None
 
     """
-    with open(config_path, "r") as fd:
-        config = json.load(fd)
-
-    model_path = os.path.join(
-        os.getcwd(),
-        'seq_2_seq_models',
-        'unformated_en_2_unformated_fr_w2w'
-    )
-    model_path = os.path.join(model_path, 'GRU_2.h5')
-
-    enc_v2id_path = os.path.join(
-        os.getcwd(),
-        "language_models",
-        encoder_lang_model_task,
-        "v2id.json"
+    (
+        lang_model_opts,
+        seq_model_opts,
+        train_opts,
+        dataset,
+        encoder_v2id
+    ) = get_dataset_eval(
+        '12-03-08-12',
+        input_file_path, 'unformated_en_w2w', 'unformated_fr_w2w'
     )
 
-    w_2_w_model = seq_2_seq_GRU(
-        vocab_inp_size=vocab_inp_size,
-        encoder_embedding_dim=encoder_config['embedding_dim'],
-        encoder_units=encoder_config['units'],
-        vocab_tar_size=vocab_tar_size,
-        decoder_embedding_dim=decoder_config['embedding_dim'],
-        decoder_units=decoder_config['units'],
-        decoder_v2id=decoder_v2id,
-        targ_seq_len=decoder_config['max_seq'],
-        BATCH_SIZE=BATCH_SIZE,
-        encoder_lang_model=encoder_config['lang_model_checkpointer'],
-        decoder_lang_model=decoder_config['lang_model_checkpointer']
+    w_2_w_model = get_model(
+        'GRU',
+        train_opts=train_opts,
+        seq_model_opts=seq_model_opts,
+        encoder_lang_config=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ],
+        decoder_lang_config=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]
     )
 
-    c_2_c_model = seq_2_seq_GRU(
-        vocab_inp_size=vocab_inp_size,
-        encoder_embedding_dim=encoder_config['embedding_dim'],
-        encoder_units=encoder_config['units'],
-        vocab_tar_size=vocab_tar_size,
-        decoder_embedding_dim=decoder_config['embedding_dim'],
-        decoder_units=decoder_config['units'],
-        decoder_v2id=decoder_v2id,
-        targ_seq_len=decoder_config['max_seq'],
-        BATCH_SIZE=BATCH_SIZE,
-        encoder_lang_model=encoder_config['lang_model_checkpointer'],
-        decoder_lang_model=decoder_config['lang_model_checkpointer']
+    unformated_translation = tf.argmax(w_2_w_model.predict(dataset), axis=-1)
+    processed_unformated_translation = postprocessing(
+        dec_data=unformated_translation,
+        dec_v2id=seq_model_opts['decoder_v2id'],
+        output=None,
+        tokenize_type=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]['tokenize_type'],
+        fasttext_model=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['fasttext_model'],
+        enc_data=input_file_path,
+        remove_punctuation=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['remove_punctuation'],
+        lower=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['lower'],
+        CAP=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['CAP'],
+        NUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['NUM'],
+        ALNUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['ALNUM'],
+        UPPER=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['UPPER'],
+        enc_v2id=encoder_v2id
     )
 
-    processed_sentence = None
+    (
+        lang_model_opts,
+        seq_model_opts,
+        train_opts,
+        dataset,
+        encoder_v2id
+    ) = get_dataset_eval(
+        '13-00-37-09',
+        processed_unformated_translation,
+        'unformated_fr_c2c', 'formated_fr_c2c'
+    )
 
-    batched_unformated_french_w2w = np.argmax(w_2_w_model.predict(processed_sentence), axis=-1)
+    c_2_c_model = get_model(
+        'GRU',
+        train_opts=train_opts,
+        seq_model_opts=seq_model_opts,
+        encoder_lang_config=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ],
+        decoder_lang_config=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]
+    )
 
-    batched_unformated_french_w2w > french_w2w.txt
+    formated_translation = tf.argmax(c_2_c_model.predict(
+        dataset
+    ), axis=-1)
+    processed_formated_translation = postprocessing(
+        dec_data=formated_translation,
+        dec_v2id=seq_model_opts['decoder_v2id'],
+        output=None,
+        tokenize_type=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]['tokenize_type'],
+        fasttext_model=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['fasttext_model'],
+        enc_data=input_file_path,
+        remove_punctuation=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['remove_punctuation'],
+        lower=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['lower'],
+        CAP=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['CAP'],
+        NUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['NUM'],
+        ALNUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['ALNUM'],
+        UPPER=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['UPPER'],
+        enc_v2id=encoder_v2id
+    )
 
-    data = process(french_w2w.txt)
-    c_2c_model.predict(data)
+    return processed_formated_translation
 
 
 def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: bool):

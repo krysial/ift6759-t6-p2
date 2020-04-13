@@ -196,7 +196,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     """
 
     # Get given dec_data in 2D numpy array format
-    dec_data = chekout_predictions(dec_data)
+    dec_data = checkout_predictions(dec_data)
 
     # Get v2id and id2v dicitionary
     if isinstance(enc_v2id, str):
@@ -246,6 +246,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     else:
         print("\nPredictions are as follows:\n")
         _ = [print(f"({i+1})", D) for i, D in enumerate(dec_data)]
+        return dec_data
 
 def oversample(data_1, data_2, n):
     """

@@ -1,9 +1,20 @@
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
+import datetime
+import json
 
 from utils import data
 from utils.data import preprocess_v2id
+
+
+def generate_config_path(root_path, dt, config_name):
+    return os.path.join(
+        root_path,
+        'configs',
+        dt,
+        '{}.json'.format(config_name)
+    )
 
 
 def get_dataset_train(
@@ -117,6 +128,28 @@ def get_dataset_train(
 
     ##########
 
+    root_path = os.path.join(
+        os.getcwd(),
+        'seq_2_seq_models',
+        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
+        train_opts['decoder_lang_model_task'][:-4] + "_" +
+        train_opts['encoder_lang_model_task'][-1] + "2" +
+        train_opts['decoder_lang_model_task'][-1]
+    )
+
+    DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
+
+    def save_json(dt, data, config_name):
+        path = generate_config_path(root_path, dt, config_name)
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as json_file:
+            json.dump(data, json_file)
+
+    save_json(DT, lang_model_opts, 'lang_model_opts')
+    save_json(DT, train_opts, 'train_opts')
+    save_json(DT, seq_model_opts, 'seq_model_opts')
+
     return (
         lang_model_opts,
         train_opts,
@@ -127,20 +160,38 @@ def get_dataset_train(
 
 
 def get_dataset_eval(
-    encoder_file_path, encoder_lang_model_task,
-    lang_model_opts_path, seq_model_opts_path, train_opts_path
+    DT,
+    encoder_file_path,
+    encoder_lang_model_task,
+    decoder_lang_model_task
 ):
     '''
 
 
     '''
+    root_path = os.path.join(
+        os.getcwd(),
+        'seq_2_seq_models',
+        encoder_lang_model_task[:-4] + "_2_" +
+        decoder_lang_model_task[:-4] + "_" +
+        encoder_lang_model_task[-1] + "2" +
+        decoder_lang_model_task[-1]
+    )
 
-    lang_model_opts = None
-    seq_model_opts = None
-    train_opts = None
+    def load_json(dt, config_name):
+        path = generate_config_path(
+            root_path, dt, config_name
+        )
 
-    _, encoder_dataset = preprocess_v2id(
-        data=os.path.join(encoder_file_path),
+        with open(path, 'r') as f:
+            return json.load(f)
+
+    lang_model_opts = load_json(DT, 'lang_model_opts')
+    seq_model_opts = load_json(DT, 'seq_model_opts')
+    train_opts = load_json(DT, 'train_opts')
+
+    encoder_v2id, encoder_dataset = preprocess_v2id(
+        data=encoder_file_path,
         v2id=os.path.join(
             os.getcwd(),
             "language_models",
@@ -163,8 +214,11 @@ def get_dataset_eval(
     print("#### ENC-DEC DATA Preprocessed ####")
 
     dataset = tf.data.Dataset.from_tensor_slices(
-        ((input_tensor_train, _))
-    )
+        (
+            (encoder_dataset, tf.zeros_like(encoder_dataset)),
+            tf.zeros_like(encoder_dataset)
+        )
+    ).batch(train_opts['batch_size'], drop_remainder=False)
 
     print("#### Datasets Loaded ####")
 
@@ -172,5 +226,6 @@ def get_dataset_eval(
         lang_model_opts,
         seq_model_opts,
         train_opts,
-        dataset
+        dataset,
+        encoder_v2id
     )
