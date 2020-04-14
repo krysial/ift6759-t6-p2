@@ -234,6 +234,9 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     # Decode integer tokens to words/chars
     dec_data = decode_token_2_words(dec_data, dec_id2v, tokenize_type)
 
+    # Clean list of words from <CAP> elements
+    dec_data = remove_cap(dec_data)
+
     # Setup fasttext model from path
     if fasttext_model is not None and isinstance(fasttext_model, str):
         fasttext_model = gensim.models.FastText.load(fasttext_model)
@@ -513,3 +516,37 @@ def remove_sos_eos(Data, v2id):
     data_without_sos_eos = [[d for d in data if (
         d != sos) and (d != eos)] for data in Data]
     return data_without_sos_eos
+
+
+def remove_cap(dec_data):
+    cap = "<CAP>"
+    Lines = []
+    for line in dec_data:
+        Line = []
+        for i, word in enumerate(line):
+            if word == cap:
+                try:
+                    line[i+1] = line[i+1][0].upper() + line[i+1][1:]
+                except IndexError:
+                    pass
+            else:
+                Line.append(word)
+        Lines.append(Line)
+    return Lines
+
+
+def remove_upper(dec_data):
+    UP = "<UPPER>"
+    Lines = []
+    for line in dec_data:
+        Line = []
+        for i, word in enumerate(line):
+            if word == UP:
+                try:
+                    line[i+1] = line[i+1].upper()
+                except IndexError:
+                    pass
+            else:
+                Line.append(word)
+        Lines.append(Line)
+    return Lines
