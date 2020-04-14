@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from seq_2_seq_models.transformer.transformer import Transformer
 from seq_2_seq_models.seq_2_seq import seq_2_seq_GRU
+from utils.seeder import SEED
 
 
 def loss_function_GRU(real, pred):
@@ -30,6 +31,8 @@ def loss_function_Transformer(real, pred):
 
 def get_model(model_name, train_opts, seq_model_opts,
               encoder_lang_config, decoder_lang_config):
+
+    SEED(S=123)
 
     if model_name == "Transformer":
         get = get_model_Transformer

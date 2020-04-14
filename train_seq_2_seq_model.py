@@ -3,6 +3,7 @@ from seq_2_seq_models.builder import get_model
 from dataloader.dataloader import get_dataset_train
 from seq_2_seq_models.seq_2_seq import checkpointer, embedding_loader, embedding_warmer, GRU_attn_warmer
 from utils.data import load_json
+from utils.seeder import SEED
 
 import tensorflow as tf
 import numpy as np
@@ -50,6 +51,9 @@ def train(
     dec_gru_start_train_epoch, steps_per_epoch,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
 ):
+
+    SEED(S=123)
+    
     DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
 
     lang_model_opts = load_json(lang_model_opts_path)

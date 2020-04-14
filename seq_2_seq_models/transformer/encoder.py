@@ -4,12 +4,15 @@ import numpy as np
 
 from seq_2_seq_models.transformer.utils import positional_encoding, point_wise_feed_forward_network
 from seq_2_seq_models.transformer.multihead_attention import MultiHeadAttention
+from utils.seeder import SEED
 
 
 class Encoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#encoder
     def __init__(self, vocab_size, max_input_seq_len, opts, dropout_rate=0.1):
         super().__init__()
+
+        SEED(S=123)
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
@@ -36,6 +39,9 @@ class EncoderLayer(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#encoder_layer
     def __init__(self, opts, rate=0.1):  # num_heads, atten_dim, ff_dim
         super().__init__()
+
+        SEED(S=123)
+
         self.multihead_attention = MultiHeadAttention(opts.num_heads, opts.atten_dim)
         self.ffn = point_wise_feed_forward_network(opts.atten_dim, opts.ff_dim)
 

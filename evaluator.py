@@ -7,10 +7,13 @@ import tensorflow as tf
 from dataloader.dataloader import get_dataset_eval
 from seq_2_seq_models.builder import get_model
 from utils.data import postprocessing
+from utils.seeder import SEED
 
 
 def seq2seq_block(DT, model_name, encoder_lang_model_task,
                   input_file, decoder_lang_model_task):
+
+    SEED(S=123)
 
     (
         lang_model_opts,
@@ -109,6 +112,8 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     Returns: None
 
     """
+
+    SEED(S=123)
 
     # Translation Task: w2w sequence model
     Translation = seq2seq_block(

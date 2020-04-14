@@ -4,6 +4,7 @@ import os
 import json
 
 from utils.data import preprocess_v2id, save_json, load_json
+from utils.seeder import SEED
 
 
 def get_dataset_train(
@@ -19,6 +20,8 @@ def get_dataset_train(
 
 
     '''
+
+    SEED(S=123)
 
     ##########
     # dataset
@@ -144,6 +147,9 @@ def get_dataset_eval(
 
 
     '''
+
+    SEED(S=123)
+    
     root_path = os.path.join(
         'seq_2_seq_models',
         encoder_lang_model_task[:-4] + "_2_" +
@@ -153,7 +159,8 @@ def get_dataset_eval(
         model_name, DT, 'configs'
     )
 
-    lang_model_opts = load_json(os.path.join(root_path, 'lang_model_opts.json'))
+    lang_model_opts = load_json(os.path.join(
+        root_path, 'lang_model_opts.json'))
     seq_model_opts = load_json(os.path.join(root_path, 'seq_model_opts.json'))
     train_opts = load_json(os.path.join(root_path, 'train_opts.json'))
 

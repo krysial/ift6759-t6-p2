@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from utils.seeder import SEED
 # From https://www.tensorflow.org/tutorials/text/transformer with small modifications
 # Specific sections are referenced in the code
 
@@ -8,6 +9,8 @@ class MultiHeadAttention(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#multi-head_attention
     def __init__(self, num_heads, atten_dim):
         super().__init__()
+
+        SEED(S=123)
 
         self.atten_dim = atten_dim
         self.num_heads = num_heads

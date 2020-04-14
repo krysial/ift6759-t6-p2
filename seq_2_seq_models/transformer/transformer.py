@@ -2,11 +2,14 @@ import tensorflow as tf
 from seq_2_seq_models.transformer.encoder import Encoder
 from seq_2_seq_models.transformer.decoder import Decoder
 from seq_2_seq_models.transformer.utils import create_padding_mask, create_combined_mask
-
+from utils.seeder import SEED
 
 class Transformer(tf.keras.Model):
     def __init__(self, max_input_seq_len, input_vocab_size, max_target_seq_len, target_vocab_size, output_SOS_id, opts):
         super(Transformer, self).__init__()
+
+        SEED(S=123)
+
         self.output_SOS_id = output_SOS_id
         self.max_target_seq_len = max_target_seq_len
         self.encoder = Encoder(input_vocab_size, max_input_seq_len, opts)  # opts: batch_size, atten_dim, num_heads, ff_dim

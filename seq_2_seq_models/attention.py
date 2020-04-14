@@ -1,8 +1,10 @@
 import tensorflow as tf
+from utils.seeder import SEED
 
 
 class BahdanauAttention(tf.keras.layers.Layer):
     def __init__(self, units):
+        SEED(S=123)
         super(BahdanauAttention, self).__init__()
         self.W1 = tf.keras.layers.Dense(units)
         self.W2 = tf.keras.layers.Dense(units)

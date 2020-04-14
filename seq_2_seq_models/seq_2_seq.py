@@ -5,6 +5,7 @@ from utils.gensim_embeddings import load_and_create
 from utils.data import swap_dict_key_value
 from seq_2_seq_models.encoder import Encoder_GRU
 from seq_2_seq_models.decoder import Decoder_GRU
+from utils.seeder import SEED
 
 
 class checkpointer(tf.keras.callbacks.Callback):
@@ -104,6 +105,8 @@ class seq_2_seq_GRU(tf.keras.Model):
                  encoder_lang_model=None, decoder_lang_model=None):
 
         super(seq_2_seq_GRU, self).__init__()
+
+        SEED(S=123)
 
         self.encoder = Encoder_GRU(vocab_size=vocab_inp_size,
                                    embedding_dim=encoder_embedding_dim,

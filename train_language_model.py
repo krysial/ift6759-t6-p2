@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from language_models.language_model import build_model, embedding_warmer, embedding_loader, Loss
 from utils.data import preprocessing
+from utils.seeder import SEED
 
 
 ###########################
@@ -43,6 +44,9 @@ except ValueError:
 def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
           batch_size, epochs, steps_per_epoch, embedding_warmer_epoch,
           ):
+
+    SEED(S=123)
+
     with open(config_path, "r") as fd:
         config = json.load(fd)
 

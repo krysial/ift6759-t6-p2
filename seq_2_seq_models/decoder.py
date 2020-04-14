@@ -1,12 +1,15 @@
 import tensorflow as tf
 from seq_2_seq_models.attention import BahdanauAttention
 from language_models.language_model import Loss
-
+from utils.seeder import SEED
 
 class Decoder_GRU(tf.keras.layers.Layer):
     def __init__(self, vocab_size, embedding_dim,
                  dec_units, lang_model=None):
         super(Decoder_GRU, self).__init__()
+
+        SEED(S=123)
+        
         self.dec_units = dec_units
 
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
