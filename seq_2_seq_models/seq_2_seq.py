@@ -1,5 +1,6 @@
 import tensorflow as tf
 import datetime
+from random import random
 
 from utils.gensim_embeddings import load_and_create
 from utils.data import swap_dict_key_value
@@ -101,7 +102,7 @@ class seq_2_seq_GRU(tf.keras.Model):
     def __init__(self, vocab_inp_size, encoder_embedding_dim, encoder_units,
                  vocab_tar_size, decoder_embedding_dim, decoder_units,
                  decoder_v2id, targ_seq_len,
-                 encoder_lang_model=None, decoder_lang_model=None):
+                 encoder_lang_model=None, decoder_lang_model=None, teacher_forcing_ratio=1):
 
         super(seq_2_seq_GRU, self).__init__()
 
@@ -115,6 +116,7 @@ class seq_2_seq_GRU(tf.keras.Model):
                                    lang_model=decoder_lang_model)
         self.v2id = decoder_v2id
         self.targ_seq_len = targ_seq_len
+        self.teacher_forcing_ratio = teacher_forcing_ratio
 
     # @tf.function(experimental_compile=True)
     def call(self, tup, targ=None, training=False):
@@ -154,7 +156,8 @@ class seq_2_seq_GRU(tf.keras.Model):
             Prediction = tf.argmax(prediction, -1)
             Predictions.append(prediction)
 
-            if training:
+            use_teacher_forcing = True if random() < self.teacher_forcing_ratio else False
+            if training and use_teacher_forcing:
                 # using teacher forcing
                 dec_input = tf.expand_dims(targ[:, t], 1)
             else:

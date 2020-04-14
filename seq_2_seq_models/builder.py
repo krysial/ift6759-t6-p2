@@ -59,13 +59,16 @@ def get_model(model_name, train_opts, seq_model_opts,
 def get_model_Transformer(model_name, seq_model_opts, train_opts,
                           encoder_lang_config, decoder_lang_config):
 
+    opts = SimpleNamespace(**seq_model_opts)
+    opts.teacher_forcing_ratio = train_opts['teacher_forcing_ratio']
+
     transformer = Transformer(
         max_input_seq_len=encoder_lang_config["max_seq"],
         input_vocab_size=encoder_lang_config["vocab_size"],
         max_target_seq_len=decoder_lang_config["max_seq"],
         target_vocab_size=decoder_lang_config["vocab_size"],
         output_SOS_id=seq_model_opts["decoder_v2id"]["<SOS>"],
-        opts=SimpleNamespace(**seq_model_opts),
+        opts=opts
     )
 
     return transformer
@@ -96,7 +99,8 @@ def get_model_GRU(model_name, seq_model_opts, train_opts,
         decoder_v2id=seq_model_opts['decoder_v2id'],
         targ_seq_len=decoder_lang_config['max_seq'],
         encoder_lang_model=seq_model_opts['encoder_config']['lang_model_checkpointer'],
-        decoder_lang_model=seq_model_opts['decoder_config']['lang_model_checkpointer']
+        decoder_lang_model=seq_model_opts['decoder_config']['lang_model_checkpointer'],
+        teacher_forcing_ratio=train_opts['teacher_forcing_ratio']
     )
 
     return GRU_seq_2_seq
