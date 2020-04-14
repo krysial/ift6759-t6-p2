@@ -1,7 +1,8 @@
 from collections import Counter
-import re
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from utils.seeder import SEED
 
+import re
 import pandas as pd
 import numpy as np
 import os
@@ -49,6 +50,8 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
             vocabulary as id
         Numpy array ``encoded_lines`` of shape (batch_size, max_seq)
     """
+
+    SEED(S=123)
 
     # Read data as list of samples
     lines = checkout_data(data)
@@ -133,6 +136,8 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
         Numpy array ``encoded_lines`` of shape (batch_size, max_seq)
     """
 
+    SEED(S=123)
+
     # Read data as list of samples
     lines = checkout_data(data)
 
@@ -211,6 +216,8 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
         dec_data: List(sentences) of shape (batch_size). Decoded sentences.
     """
 
+    SEED(S=123)
+
     # Get given dec_data in 2D numpy array format
     dec_data = checkout_predictions(dec_data)
 
@@ -280,6 +287,8 @@ def oversample(data_1, data_2, n):
     Returns:
         Two lists of sampled sentences.
     """
+
+    SEED(S=123)
 
     # Read lines from datasets
     lines_1 = checkout_data(data_1)
