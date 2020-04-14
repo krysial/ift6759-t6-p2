@@ -1,9 +1,9 @@
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
+import json
 
-from utils import data
-from utils.data import preprocess_v2id
+from utils.data import preprocess_v2id, save_json, load_json
 
 
 def get_dataset_train(
@@ -13,6 +13,7 @@ def get_dataset_train(
     lang_model_opts,
     train_opts,
     seq_model_opts,
+    DT
 ):
     '''
 
@@ -23,18 +24,14 @@ def get_dataset_train(
     # dataset
     ##########
     encoder_v2id, encoder_dataset = preprocess_v2id(
-        data=os.path.join(
-            os.getcwd(), lang_model_opts[encoder_lang_model_task]['data_file']),
-        v2id=os.path.join(
-            os.getcwd(),
-            "language_models",
-            encoder_lang_model_task,
-            "v2id.json"
-        ),
+        data=lang_model_opts[encoder_lang_model_task]['data_file'],
+        v2id=os.path.join("language_models",
+                          encoder_lang_model_task, "v2id.json"),
         tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
         lower=lang_model_opts[encoder_lang_model_task]['lower'],
+        threshold=lang_model_opts[encoder_lang_model_task]['threshold'],
         CAP=lang_model_opts[encoder_lang_model_task]['CAP'],
         NUM=lang_model_opts[encoder_lang_model_task]['NUM'],
         ALNUM=lang_model_opts[encoder_lang_model_task]['ALNUM'],
@@ -43,18 +40,14 @@ def get_dataset_train(
     )
 
     decoder_v2id, decoder_dataset = preprocess_v2id(
-        data=os.path.join(
-            os.getcwd(), lang_model_opts[decoder_lang_model_task]['data_file']),
-        v2id=os.path.join(
-            os.getcwd(),
-            "language_models",
-            decoder_lang_model_task,
-            "v2id.json"
-        ),
+        data=lang_model_opts[decoder_lang_model_task]['data_file'],
+        v2id=os.path.join("language_models",
+                          decoder_lang_model_task, "v2id.json"),
         tokenize_type=lang_model_opts[decoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[decoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[decoder_lang_model_task]['remove_punctuation'],
         lower=lang_model_opts[decoder_lang_model_task]['lower'],
+        threshold=lang_model_opts[decoder_lang_model_task]['threshold'],
         CAP=lang_model_opts[decoder_lang_model_task]['CAP'],
         NUM=lang_model_opts[decoder_lang_model_task]['NUM'],
         ALNUM=lang_model_opts[decoder_lang_model_task]['ALNUM'],
@@ -62,6 +55,7 @@ def get_dataset_train(
         fasttext_model=lang_model_opts[decoder_lang_model_task]['fasttext_model'],
     )
 
+    seq_model_opts['encoder_v2id'] = encoder_v2id
     seq_model_opts['decoder_v2id'] = decoder_v2id
 
     ##########
@@ -102,20 +96,34 @@ def get_dataset_train(
         ((input_tensor_train, target_tensor_train), target_tensor_train)
     ).shuffle(BUFFER_SIZE)
     dataset_train = dataset_train.batch(
-        train_opts['batch_size'],
-        drop_remainder=True).repeat()
+        train_opts['batch_size'], drop_remainder=True).repeat()
 
     dataset_valid = tf.data.Dataset.from_tensor_slices(
         ((input_tensor_valid, target_tensor_valid), target_tensor_valid)
     ).shuffle(BUFFER_SIZE)
     dataset_valid = dataset_valid.batch(
-        train_opts['batch_size'], drop_remainder=True
-    ).repeat()
+        train_opts['batch_size'], drop_remainder=True).repeat()
 
     print("#### Datasets Loaded ####")
     print(dataset_train, dataset_valid)
 
     ##########
+
+    root_path = os.path.join(
+        'seq_2_seq_models',
+        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
+        train_opts['decoder_lang_model_task'][:-4] + "_" +
+        train_opts['encoder_lang_model_task'][-1] + "2" +
+        train_opts['decoder_lang_model_task'][-1],
+        train_opts['model_name'], DT, 'configs'
+    )
+
+    save_json(data=lang_model_opts,
+              path=os.path.join(root_path, 'lang_model_opts.json'))
+    save_json(data=train_opts,
+              path=os.path.join(root_path, 'train_opts.json'))
+    save_json(data=seq_model_opts,
+              path=os.path.join(root_path, 'seq_model_opts.json'))
 
     return (
         lang_model_opts,
@@ -127,30 +135,37 @@ def get_dataset_train(
 
 
 def get_dataset_eval(
-    encoder_file_path, encoder_lang_model_task,
-    lang_model_opts_path, seq_model_opts_path, train_opts_path
+    DT, model_name,
+    encoder_file_path,
+    encoder_lang_model_task,
+    decoder_lang_model_task
 ):
     '''
 
 
     '''
+    root_path = os.path.join(
+        'seq_2_seq_models',
+        encoder_lang_model_task[:-4] + "_2_" +
+        decoder_lang_model_task[:-4] + "_" +
+        encoder_lang_model_task[-1] + "2" +
+        decoder_lang_model_task[-1],
+        model_name, DT, 'configs'
+    )
 
-    lang_model_opts = None
-    seq_model_opts = None
-    train_opts = None
+    lang_model_opts = load_json(os.path.join(root_path, 'lang_model_opts.json'))
+    seq_model_opts = load_json(os.path.join(root_path, 'seq_model_opts.json'))
+    train_opts = load_json(os.path.join(root_path, 'train_opts.json'))
 
-    _, encoder_dataset = preprocess_v2id(
-        data=os.path.join(encoder_file_path),
-        v2id=os.path.join(
-            os.getcwd(),
-            "language_models",
-            encoder_lang_model_task,
-            "v2id.json"
-        ),
+    encoder_v2id, encoder_dataset = preprocess_v2id(
+        data=encoder_file_path,
+        v2id=os.path.join("language_models",
+                          encoder_lang_model_task, "v2id.json"),
         tokenize_type=lang_model_opts[encoder_lang_model_task]['tokenize_type'],
         max_seq=lang_model_opts[encoder_lang_model_task]['max_seq'],
         remove_punctuation=lang_model_opts[encoder_lang_model_task]['remove_punctuation'],
         lower=lang_model_opts[encoder_lang_model_task]['lower'],
+        threshold=lang_model_opts[encoder_lang_model_task]['threshold'],
         CAP=lang_model_opts[encoder_lang_model_task]['CAP'],
         NUM=lang_model_opts[encoder_lang_model_task]['NUM'],
         ALNUM=lang_model_opts[encoder_lang_model_task]['ALNUM'],
@@ -163,8 +178,11 @@ def get_dataset_eval(
     print("#### ENC-DEC DATA Preprocessed ####")
 
     dataset = tf.data.Dataset.from_tensor_slices(
-        ((input_tensor_train, _))
-    )
+        (
+            (encoder_dataset, tf.zeros_like(encoder_dataset)),
+            tf.zeros_like(encoder_dataset)
+        )
+    ).batch(train_opts['batch_size'], drop_remainder=False)
 
     print("#### Datasets Loaded ####")
 
@@ -172,5 +190,6 @@ def get_dataset_eval(
         lang_model_opts,
         seq_model_opts,
         train_opts,
-        dataset
+        dataset,
+        encoder_v2id
     )

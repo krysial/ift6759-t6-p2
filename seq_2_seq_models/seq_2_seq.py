@@ -1,7 +1,101 @@
 import tensorflow as tf
+import datetime
 
+from utils.gensim_embeddings import load_and_create
+from utils.data import swap_dict_key_value
 from seq_2_seq_models.encoder import Encoder_GRU
 from seq_2_seq_models.decoder import Decoder_GRU
+
+
+class checkpointer(tf.keras.callbacks.Callback):
+    def __init__(self, filepath):
+        super(checkpointer, self).__init__()
+        self.filepath = filepath
+
+    def on_train_begin(self, logs=None):
+        self.ckpt = tf.train.Checkpoint(
+            model=self.model, optimizer=self.model.optimizer
+        )
+        self.ckpt_manager = tf.train.CheckpointManager(
+            self.ckpt,
+            self.filepath,
+            max_to_keep=5
+        )
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.ckpt_manager.save()
+
+
+class embedding_loader(tf.keras.callbacks.Callback):
+    def __init__(self, enc_fasttext_path=None, dec_fasttext_path=None,
+                 enc_v2id=None, enc_id2v=None, dec_v2id=None, dec_id2v=None):
+        super(embedding_loader, self).__init__()
+        self.enc_fasttext_path = enc_fasttext_path
+        self.dec_fasttext_path = dec_fasttext_path
+
+        if enc_fasttext_path is not None:
+            self.enc_id2v = self.get_id2v(enc_id2v, enc_v2id)
+            self.enc_emb_matrix = load_and_create(
+                enc_fasttext_path, self.enc_id2v)
+        if dec_fasttext_path is not None:
+            self.dec_id2v = self.get_id2v(dec_id2v, dec_v2id)
+            self.dec_emb_matrix = load_and_create(
+                dec_fasttext_path, self.dec_id2v)
+
+    def get_id2v(self, id2v=None, v2id=None):
+        if id2v is None:
+            return swap_dict_key_value(v2id)
+        else:
+            return id2v
+
+    def on_train_begin(self, epoch, logs=None):
+        if self.enc_fasttext_path is not None:
+            self.model.encoder.embedding.build((None,))
+            self.model.encoder.embedding.set_weights([self.enc_emb_matrix])
+            self.model.encoder.embedding.trainable = False
+        if self.dec_fasttext_path is not None:
+            self.model.decoder.embedding.build((None,))
+            self.model.decoder.embedding.set_weights([self.dec_emb_matrix])
+            self.model.decoder.embedding.trainable = False
+
+
+class embedding_warmer(tf.keras.callbacks.Callback):
+    def __init__(self, enc_embd_start_train_epoch=1, dec_embd_start_train_epoch=1):
+        super(embedding_warmer, self).__init__()
+        self.enc_embd_start_train_epoch = enc_embd_start_train_epoch
+        self.dec_embd_start_train_epoch = dec_embd_start_train_epoch
+
+    def on_epoch_begin(self, epoch, logs=None):
+        if epoch >= self.enc_embd_start_train_epoch:
+            self.model.encoder.embedding.trainable = True
+        else:
+            self.model.encoder.embedding.trainable = False
+        if epoch >= self.dec_embd_start_train_epoch:
+            self.model.decoder.embedding.trainable = True
+        else:
+            self.model.decoder.embedding.trainable = False
+
+
+class GRU_attn_warmer(tf.keras.callbacks.Callback):
+    def __init__(self, enc_gru_start_train_epoch=1, dec_gru_start_train_epoch=1):
+        super(GRU_attn_warmer, self).__init__()
+        self.enc_gru_start_train_epoch = enc_gru_start_train_epoch
+        self.dec_gru_start_train_epoch = dec_gru_start_train_epoch
+
+    def on_epoch_begin(self, epoch, logs=None):
+        if epoch >= self.enc_gru_start_train_epoch:
+            self.model.encoder.embedding.trainable = True
+            self.model.encoder.gru.trainable = True
+        else:
+            self.model.encoder.embedding.trainable = False
+            self.model.encoder.gru.trainable = False
+        if epoch >= self.dec_gru_start_train_epoch:
+            self.model.decoder.embedding.trainable = True
+            self.model.decoder.gru.trainable = True
+        else:
+            self.model.decoder.embedding.trainable = False
+            self.model.decoder.gru.trainable = False
+
 
 class seq_2_seq_GRU(tf.keras.Model):
     def __init__(self, vocab_inp_size, encoder_embedding_dim, encoder_units,

@@ -1,27 +1,29 @@
 {
     "unformated_en_w2w": {
         "max_seq": null,
-        "vocab_size": null,
+        "vocab_size": 20000,
         "remove_punctuation": true,
-        "embedding_dim": 128,
-        "fasttext_model":"embeddings/unformated_en_w2w/unaligned_unformated_en",
+        "embedding_dim": 8,
+        "fasttext_model":"embeddings/unformated_en_w2w/8/unaligned_unformated_en",
         "CAP":true,
         "UPPER":true,
         "NUM":true,
         "ALNUM":true,
-        "lower":false
+        "lower":false,
+        "threshold":0.7
     },
     "unformated_fr_w2w": {
         "max_seq": null,
-        "vocab_size": null,
+        "vocab_size": 25000,
         "remove_punctuation": true,
-        "embedding_dim": 128,
-        "fasttext_model":"embeddings/unformated_fr_w2w/unaligned_unformated_fr",
+        "embedding_dim": 8,
+        "fasttext_model":"embeddings/unformated_fr_w2w/8/unaligned_unformated_fr",
         "CAP":true,
         "UPPER":true,
         "NUM":true,
         "ALNUM":true,
-        "lower":false
+        "lower":false,
+        "threshold":0.7
     },
     "unformated_fr_c2c": {
         "max_seq": null,
@@ -33,7 +35,8 @@
         "UPPER":false,
         "NUM":false,
         "ALNUM":false,
-        "lower":false
+        "lower":false,
+        "threshold":null
     },
     "formated_fr_c2c": {
         "max_seq": null,
@@ -45,6 +48,7 @@
         "UPPER":false,
         "NUM":false,
         "ALNUM":false,
-        "lower":false
+        "lower":false,
+        "threshold":null
     }
 }

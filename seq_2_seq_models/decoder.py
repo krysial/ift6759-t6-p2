@@ -3,7 +3,7 @@ from seq_2_seq_models.attention import BahdanauAttention
 from language_models.language_model import Loss
 
 
-class Decoder_GRU(tf.keras.Model):
+class Decoder_GRU(tf.keras.layers.Layer):
     def __init__(self, vocab_size, embedding_dim,
                  dec_units, lang_model=None):
         super(Decoder_GRU, self).__init__()

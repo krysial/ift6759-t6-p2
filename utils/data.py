@@ -4,13 +4,14 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 import pandas as pd
 import numpy as np
+import os
 import json
 from tqdm import tqdm
 import gensim.models
 
 
 def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=True,
-                    add_end=True, remove_punctuation=True, lower=True,
+                    add_end=True, remove_punctuation=True, lower=True, threshold=0.5,
                     CAP=False, NUM=False, ALNUM=False, UPPER=False,
                     tokenize_type="w", padding='post', post_process_usage=False):
     """
@@ -30,6 +31,8 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
         remove_punctuation: boolean, default True.
             If True, removes punctuation symbols.
         lower: boolean, default True. To condition case folding.
+        threshold: float. default is 0.5. 
+            To threshold fasttext similarity indexing.
         CAP: boolean, default False. To condition special token <CAP>
         NUM: boolean, default False. To condition special token <NUM>
         ALNUM: boolean, default False. To condition special token <ALNUM>
@@ -38,6 +41,8 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
             Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
             Defines where to pad, begining('pre') or end('post').
+        post_process_usage: boolean, default is False. 
+            Defines the usage of this function.
 
     Returns:
         Dictionaries ``v2id`` and ``id2v`` for encoding and decoding
@@ -79,7 +84,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
         fasttext_model = gensim.models.FastText.load(fasttext_model)
 
     # Encode text data using v2id
-    lines = handle_encoding_v2id(lines, v2id, fasttext_model)
+    lines = handle_encoding_v2id(lines, v2id, fasttext_model, threshold)
 
     # Padd Padd Padd ..
     lines = handle_padding(lines, padding, max_seq, v2id)
@@ -90,7 +95,8 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
 def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
                   add_end=True, remove_punctuation=True, lower=True,
                   CAP=False, NUM=False, ALNUM=False, UPPER=False,
-                  tokenize_type="w", padding='post', save_v2id_path=None):
+                  tokenize_type="w", padding='post', save_v2id_path=None,
+                  fasttext_model=None, threshold=0.5):
     """
     Gets tokenized and integer encoded format of given text corpus.
 
@@ -117,8 +123,9 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
             Defines where to pad, begining('pre') or end('post').
         save_v2id_path: string, default is None.
             Path of saving v2id dictionary mapping.
-        post_process_usage: Bool, default is False.
-            Condition allowing usage of function during post_processing.
+        fasttext_model: str, default None. Fasttext Model path
+        threshold: float. default is 0.5. 
+            To threshold fasttext similarity indexing.
 
     Returns:
         Dictionaries ``v2id`` and ``id2v`` for encoding and
@@ -137,12 +144,12 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     if remove_punctuation:
         lines = handle_punctuation(lines)
 
+    # Get corpus tokens
+    id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
+
     # Apply regex constraints
     if CAP or NUM or ALNUM or UPPER:
         lines = handle_regex(lines, CAP=CAP, NUM=NUM, ALNUM=ALNUM, UPPER=UPPER)
-
-    # Get corpus tokens
-    id2v, v2id = handle_vocab(lines, tokenize_type, vocab_size)
 
     # Get data as list(list(token))
     lines = handle_tokenizer(lines, tokenize_type)
@@ -150,22 +157,26 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     # Add <SOS> / <EOS>
     lines = handle_sos_eos(lines, add_start, add_end)
 
+    # Setup fasttext model from path
+    if fasttext_model is not None and isinstance(fasttext_model, str):
+        fasttext_model = gensim.models.FastText.load(fasttext_model)
+
     # Encode text data using v2id
-    lines = handle_encoding_v2id(lines, v2id)
+    lines = handle_encoding_v2id(lines, v2id, fasttext_model, threshold)
 
     # Padd Padd Padd ..
     lines = handle_padding(lines, padding, max_seq, v2id)
 
     # Save v2id
     if save_v2id_path is not None:
-        save_v2id(v2id, path=save_v2id_path)
+        save_json(data=v2id, path=save_v2id_path)
 
     return id2v, v2id, lines
 
 
 def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type='w',
                    fasttext_model=None, enc_data=None, add_start=True, add_end=True,
-                   remove_punctuation=True, lower=True, enc_v2id=None,
+                   remove_punctuation=True, lower=True, enc_v2id=None, Print=False,
                    CAP=False, NUM=False, ALNUM=False, UPPER=False):
     """
     Decodes given integer token lists to text corpus using given 
@@ -175,28 +186,33 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
         dec_data: List(list(tokens)) or list(tokens) or np.array(shape=(batch_size,)) 
             Tokens are in int format.
         dec_v2id: string or dict, Mapping of vocabulary to integer encoding.
+        dec_id2v: string or dict. defalt None. Mapping of int to vocab encoding
         output: string or None, default is None. If None, prints the decoded 
             sentence list. Else saves at given output path.
         token_type: 'w' or 'c', default is 'w'. 'w' represents word tokens & 'c'
-            represents char tokens.
-        fasttext_model: str, default None. Fasttext Model path
+            represents char tokens. This is for encoder.
+        fasttext_model: str, default None. Fasttext Model path. For encoder
         enc_data: string or list. Path of input text file when string and
             data (batch of sentences expected) itself when List(list).
         add_start: boolean, default True.
-            If True, adds start-of-sequence (<SOS>)
+            If True, adds start-of-sequence (<SOS>). For encoder
         add_end: boolean, default True.
-            If True, adds end-of-sequence (<EOS>) tokens.
+            If True, adds end-of-sequence (<EOS>) tokens. For encoder
         remove_punctuation: boolean, default True.
-            If True, removes punctuation symbols.
-        lower: boolean, default True. To condition case folding.
+            If True, removes punctuation symbols. For encoder.
+        lower: boolean, default True. To condition case folding. For encoder.
         enc_v2id: string or dict, Mapping of vocabulary to integer encoding.
+        CAP: boolean, default False. To condition special token <CAP>. For enc.
+        NUM: boolean, default False. To condition special token <NUM>. For enc.
+        ALNUM: boolean, default False. Condition special token <ALNUM>. For enc.
+        UPPER: boolean, default False. Condition special token <UPPER>. For enc.
 
     Returns:
         dec_data: List(sentences) of shape (batch_size). Decoded sentences.
     """
 
     # Get given dec_data in 2D numpy array format
-    dec_data = chekout_predictions(dec_data)
+    dec_data = checkout_predictions(dec_data)
 
     # Get v2id and id2v dicitionary
     if isinstance(enc_v2id, str):
@@ -236,16 +252,21 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
                                    ALNUM=False,
                                    UPPER=False)
         # Map predicted <UNK> with word in input
+        # deal with all special tokens except SOS EOS PAD
         dec_data = deal_with_UNK_pred(dec_data, enc_data, enc_v2id, dec_v2id,
                                       fasttext_model)
 
     # Get tokens as
+
+    if Print:
+        print("\nPredictions are as follows:\n")
+        _ = [print(f"({i+1})", D) for i, D in enumerate(dec_data)]
     if output is not None:
         write_file(dec_data, output)
         print("Predictions written to file at {}".format(output))
-    else:
-        print("\nPredictions are as follows:\n")
-        _ = [print(f"({i+1})", D) for i, D in enumerate(dec_data)]
+    if output is None:
+        return dec_data
+
 
 def oversample(data_1, data_2, n):
     """
@@ -255,7 +276,7 @@ def oversample(data_1, data_2, n):
         data_1: string or list of sentences. First dataset.
         data_2: string or list of sentences. Second dataset.
         n: integer or float. If integer: number of samples. If float: number of samples relative to input dataset size.
-    
+
     Returns:
         Two lists of sampled sentences.
     """
@@ -263,7 +284,8 @@ def oversample(data_1, data_2, n):
     # Read lines from datasets
     lines_1 = checkout_data(data_1)
     lines_2 = checkout_data(data_2)
-    assert len(lines_1) == len(lines_2), 'Oversampled datasets should contain the same number of sentences.'
+    assert len(lines_1) == len(
+        lines_2), 'Oversampled datasets should contain the same number of sentences.'
 
     # Initialize variables
     samples_1 = []
@@ -394,12 +416,15 @@ def handle_sos_eos(lines, add_start, add_end):
     return lines
 
 
-def handle_encoding_v2id(lines, v2id, fasttext_model=None):
+def handle_encoding_v2id(lines, v2id, fasttext_model=None, threshold=0.5):
+
+    vocab2id = v2id.copy()
+
     if fasttext_model is not None:
-        encoded_lines = [[handle_oov(l, v2id, fasttext_model)
+        encoded_lines = [[handle_oov(l, vocab2id, fasttext_model, 10, threshold)
                           for l in line] for line in tqdm(lines)]
     else:
-        encoded_lines = [[v2id.setdefault(l, v2id['<UNK>'])
+        encoded_lines = [[vocab2id.setdefault(l, vocab2id['<UNK>'])
                           for l in line] for line in tqdm(lines)]
     return encoded_lines
 
@@ -426,10 +451,10 @@ def handle_padding(lines, padding, max_seq, v2id):
     return encoded_lines
 
 
-def save_v2id(v2id, path):
+def save_json(data, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
-        json.dump(v2id, f)
-    print("\n# v2id dictionary saved at: {}".format(path))
+        json.dump(data, f)
 
 
 def load_json(path):

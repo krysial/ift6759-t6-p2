@@ -3,7 +3,7 @@ import tensorflow as tf
 from language_models.language_model import Loss
 
 
-class Encoder_GRU(tf.keras.Model):
+class Encoder_GRU(tf.keras.layers.Layer):
     def __init__(self, vocab_size, embedding_dim, enc_units,
                  lang_model=None):
         super(Encoder_GRU, self).__init__()

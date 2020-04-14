@@ -1,6 +1,97 @@
 import argparse
 import subprocess
 import tempfile
+import os
+import tensorflow as tf
+
+from dataloader.dataloader import get_dataset_eval
+from seq_2_seq_models.builder import get_model
+from utils.data import postprocessing
+
+
+def seq2seq_block(DT, model_name, encoder_lang_model_task,
+                  input_file, decoder_lang_model_task):
+
+    (
+        lang_model_opts,
+        seq_model_opts,
+        train_opts,
+        dataset,
+        encoder_v2id
+    ) = get_dataset_eval(
+        DT, model_name,
+        input_file,
+        encoder_lang_model_task,
+        decoder_lang_model_task
+    )
+
+    model = get_model(
+        model_name,
+        train_opts=train_opts,
+        seq_model_opts=seq_model_opts,
+        encoder_lang_config=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ],
+        decoder_lang_config=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]
+    )
+
+    # Directory where the checkpoints will be loaded from
+    checkpoint_dir = os.path.join(
+        'seq_2_seq_models',
+        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
+        train_opts['decoder_lang_model_task'][:-4] + "_" +
+        train_opts['encoder_lang_model_task'][-1] + "2" +
+        train_opts['decoder_lang_model_task'][-1],
+        train_opts['model_name'], DT
+    )
+
+    ckpt = tf.train.Checkpoint(
+        model=model, optimizer=model.optimizer)
+
+    ckpt_manager = tf.train.CheckpointManager(
+        ckpt, checkpoint_dir, max_to_keep=5)
+
+    # if a checkpoint exists, restore the latest checkpoint.
+    if ckpt_manager.latest_checkpoint:
+        ckpt.restore(ckpt_manager.latest_checkpoint)
+
+    predictions = tf.argmax(model.predict(dataset), axis=-1)
+
+    processed_predicitons = postprocessing(
+        dec_data=predictions,
+        dec_v2id=seq_model_opts['decoder_v2id'],
+        Print=True,
+        tokenize_type=lang_model_opts[
+            train_opts['decoder_lang_model_task']
+        ]['tokenize_type'],
+        fasttext_model=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['fasttext_model'],
+        enc_data=input_file,
+        remove_punctuation=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['remove_punctuation'],
+        lower=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['lower'],
+        CAP=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['CAP'],
+        NUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['NUM'],
+        ALNUM=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['ALNUM'],
+        UPPER=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['UPPER'],
+        enc_v2id=encoder_v2id
+    )
+
+    return processed_predicitons
 
 
 def generate_predictions(input_file_path: str, pred_file_path: str):
@@ -19,9 +110,23 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
 
     """
 
-    ##### MODIFY BELOW #####
-    ...
-    ##### MODIFY ABOVE #####
+    # Translation Task: w2w sequence model
+    Translation = seq2seq_block(
+        DT='14-01-10-15',
+        model_name="Transformer",
+        input_file=input_file_path,
+        encoder_lang_model_task='unformated_en_w2w',
+        decoder_lang_model_task='unformated_fr_w2w')
+
+    # Punctuation Task: c2c sequence model
+    Punctuated_Translation = seq2seq_block(
+        DT='14-01-07-46',
+        model_name="GRU",
+        input_file=Translation,
+        encoder_lang_model_task='unformated_fr_c2c',
+        decoder_lang_model_task='formated_fr_c2c')
+
+    return Punctuated_Translation
 
 
 def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: bool):
@@ -37,7 +142,7 @@ def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: b
     """
     out = subprocess.run(["sacrebleu", "--input", pred_file_path, target_file_path, '--tokenize',
                           'none', '--sentence-level', '--score-only'],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     lines = out.stdout.split('\n')
     if print_all_scores:
         print('\n'.join(lines[:-1]))

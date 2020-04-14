@@ -5,8 +5,8 @@ import tensorflow as tf
 # From: https://www.tensorflow.org/tutorials/text/transformer#positional_encoding
 def positional_encoding(position, d_model):
     angle_rads = get_angles(np.arange(position)[:, np.newaxis],
-                                 np.arange(d_model)[np.newaxis, :],
-                                 d_model)
+                            np.arange(d_model)[np.newaxis, :],
+                            d_model)
 
     # apply sin to even indices in the array; 2i
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
@@ -36,8 +36,8 @@ def create_padding_mask(seqs):  # seqs (batch_size * seq_len)
 
 # From: https://www.tensorflow.org/tutorials/text/transformer#masking
 def create_look_ahead_mask(size):
-  mask = 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)
-  return mask  # (seq_len, seq_len)
+    mask = 1 - tf.linalg.band_part(tf.ones((size, size)), -1, 0)
+    return mask  # (seq_len, seq_len)
 
 
 # From: https://www.tensorflow.org/tutorials/text/transformer#point_wise_feed_forward_network
@@ -50,6 +50,8 @@ def point_wise_feed_forward_network(atten_dim, dff):
 
 def create_combined_mask(targets_input):
     target_pad_mask = create_padding_mask(targets_input)
-    target_look_ahead_mask = create_look_ahead_mask(tf.shape(targets_input)[-1])  # seq_len of targets
+    target_look_ahead_mask = create_look_ahead_mask(
+        tf.shape(targets_input)[-1]
+    )  # seq_len of targets
     combined_mask = tf.maximum(target_pad_mask, target_look_ahead_mask)
     return combined_mask
