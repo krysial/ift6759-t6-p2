@@ -228,6 +228,9 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     # Clean list from padding elements
     dec_data = remove_padding(dec_data, dec_v2id)
 
+    # Clean list from sos and eos elements
+    dec_data = remove_sos_eos(dec_data, dec_v2id)
+
     # Decode integer tokens to words/chars
     dec_data = decode_token_2_words(dec_data, dec_id2v, tokenize_type)
 
@@ -502,3 +505,11 @@ def remove_padding(Data, v2id):
     pad = v2id['<PAD>']
     data_without_pad = [[d for d in data if d != pad] for data in Data]
     return data_without_pad
+
+
+def remove_sos_eos(Data, v2id):
+    sos = v2id['<SOS>']
+    eos = v2id['<EOS>']
+    data_without_sos_eos = [[d for d in data if (
+        d != sos) and (d != eos)] for data in Data]
+    return data_without_sos_eos
