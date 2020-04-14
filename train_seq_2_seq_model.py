@@ -20,6 +20,7 @@ logger = tf.get_logger()
 logger.setLevel(logging.FATAL)
 logging.disable(logging.CRITICAL)
 
+tf.random.set_seed(12345)
 
 @click.command()
 @click.option('--encoder_lang_model_task', default=None)

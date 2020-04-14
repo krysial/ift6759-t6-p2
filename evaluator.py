@@ -8,6 +8,8 @@ from dataloader.dataloader import get_dataset_eval
 from seq_2_seq_models.builder import get_model
 from utils.data import postprocessing
 
+tf.random.set_seed(12345)
+
 
 def seq2seq_block(DT, model_name, encoder_lang_model_task,
                   input_file, decoder_lang_model_task):
