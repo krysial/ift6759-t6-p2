@@ -62,7 +62,7 @@ def seq2seq_block(DT, model_name, encoder_lang_model_task,
     processed_predicitons = postprocessing(
         dec_data=predictions,
         dec_v2id=seq_model_opts['decoder_v2id'],
-        Print=False,
+        Print=True,
         tokenize_type=lang_model_opts[
             train_opts['decoder_lang_model_task']
         ]['tokenize_type'],
@@ -112,15 +112,15 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
 
     # Translation Task: w2w sequence model
     Translation = seq2seq_block(
-        DT='12-03-08-12',
-        model_name="GRU",
+        DT='14-01-10-15',
+        model_name="Transformer",
         input_file=input_file_path,
         encoder_lang_model_task='unformated_en_w2w',
         decoder_lang_model_task='unformated_fr_w2w')
 
     # Punctuation Task: c2c sequence model
     Punctuated_Translation = seq2seq_block(
-        DT='13-00-37-09',
+        DT='14-01-07-46',
         model_name="GRU",
         input_file=Translation,
         encoder_lang_model_task='unformated_fr_c2c',
