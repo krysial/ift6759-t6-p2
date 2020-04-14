@@ -237,6 +237,9 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     # Clean list of words from <CAP> elements
     dec_data = remove_cap(dec_data)
 
+    # Clean list of words from <UPPER> elements
+    dec_data = remove_upper(dec_data)
+
     # Setup fasttext model from path
     if fasttext_model is not None and isinstance(fasttext_model, str):
         fasttext_model = gensim.models.FastText.load(fasttext_model)
