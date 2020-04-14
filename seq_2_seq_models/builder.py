@@ -61,7 +61,6 @@ def get_model_Transformer(model_name, seq_model_opts, train_opts,
 
     opts = SimpleNamespace(**seq_model_opts)
     opts.teacher_forcing_ratio = train_opts['teacher_forcing_ratio']
-
     transformer = Transformer(
         max_input_seq_len=encoder_lang_config["max_seq"],
         input_vocab_size=encoder_lang_config["vocab_size"],
