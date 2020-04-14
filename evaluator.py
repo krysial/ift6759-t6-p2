@@ -64,12 +64,15 @@ def seq2seq_block(DT, model_name, encoder_lang_model_task,
         dec_v2id=seq_model_opts['decoder_v2id'],
         Print=True,
         tokenize_type=lang_model_opts[
-            train_opts['decoder_lang_model_task']
+            train_opts['encoder_lang_model_task']
         ]['tokenize_type'],
         fasttext_model=lang_model_opts[
             train_opts['encoder_lang_model_task']
         ]['fasttext_model'],
         enc_data=input_file,
+        threshold=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['threshold'],
         remove_punctuation=lang_model_opts[
             train_opts['encoder_lang_model_task']
         ]['remove_punctuation'],
