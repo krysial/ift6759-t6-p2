@@ -37,6 +37,13 @@ logging.disable(logging.CRITICAL)
 @click.option('--train_split_ratio', default=None, type=float)
 @click.option('--steps_per_epoch', default=None, type=int)
 @click.option('--validation_freq', default=None, type=int)
+@click.option('--num_layers', default=None, type=int)
+@click.option('--atten_dim', default=None, type=int)
+@click.option('--num_heads', default=None, type=int)
+@click.option('--ff_dim', default=None, type=int)
+@click.option('--units', default=None, type=int)
+@click.option('--enc_embedding_dim', default=None, type=int)
+@click.option('--dec_embedding_dim', default=None, type=int)
 @click.option('--model_name', default=None)
 @click.option('--load_embedding', is_flag=True)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
@@ -47,9 +54,11 @@ def train(
     batch_size, epochs, lr, dr, train_split_ratio,
     enc_checkpoint_epoch, dec_checkpoint_epoch, model_name,
     enc_embd_start_train_epoch, dec_embd_start_train_epoch,
-    load_embedding, enc_gru_start_train_epoch,
+    load_embedding, enc_gru_start_train_epoch, units,
     dec_gru_start_train_epoch, steps_per_epoch, validation_freq,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
+    num_layers, atten_dim, num_heads, ff_dim, enc_embedding_dim,
+    dec_embedding_dim
 ):
     DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
 
@@ -82,6 +91,21 @@ def train(
     if load_embedding:
         train_opts['load_embedding'] = load_embedding
 
+    if train_opts['model_name'] == "GRU" and units is not None:
+        seq_model_opts['units'] = units
+
+    if train_opts['model_name'] == "Transformer" and num_layers is not None:
+        seq_model_opts['num_layers'] = num_layers
+
+    if train_opts['model_name'] == "Transformer" and atten_dim is not None:
+        seq_model_opts['atten_dim'] = atten_dim
+
+    if train_opts['model_name'] == "Transformer" and num_heads is not None:
+        seq_model_opts['num_heads'] = num_heads
+
+    if train_opts['model_name'] == "Transformer" and ff_dim is not None:
+        seq_model_opts['ff_dim'] = ff_dim
+
     if enc_checkpoint_epoch is not None:
         seq_model_opts['encoder_config']['enc_checkpoint_epoch'] = enc_checkpoint_epoch
 
@@ -102,13 +126,48 @@ def train(
 
     if train_split_ratio is not None:
         train_opts['train_split_ratio'] = train_split_ratio
-    
+
     if steps_per_epoch is not None:
         train_opts['steps_per_epoch'] = steps_per_epoch
-    
+
     if validation_freq is not None:
         train_opts['validation_freq'] = validation_freq
 
+    if enc_embedding_dim is not None:
+        lang_model_opts[train_opts['encoder_lang_model_task']
+                        ]['embedding_dim'] = enc_embedding_dim
+
+    if dec_embedding_dim is not None:
+        lang_model_opts[train_opts['decoder_lang_model_task']
+                        ]['embedding_dim'] = dec_embedding_dim
+
+    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
+        lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
+            train_opts['encoder_lang_model_task'] + "/" + \
+            str(lang_model_opts[train_opts['encoder_lang_model_task']]["embedding_dim"]) + "/" + \
+            lang_model_opts[train_opts['encoder_lang_model_task']
+                            ]['fasttext_model']
+
+    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
+        lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
+            train_opts['decoder_lang_model_task'] + "/" + \
+            str(lang_model_opts[train_opts['decoder_lang_model_task']]["embedding_dim"]) + "/" + \
+            lang_model_opts[train_opts['decoder_lang_model_task']
+                            ]['fasttext_model']
+
+    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
+        lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
+            train_opts['encoder_lang_model_task'] + "/" + \
+            str(seq_model_opts["atten_dim"]) + "/" + \
+            lang_model_opts[train_opts['encoder_lang_model_task']
+                            ]['fasttext_model']
+
+    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
+        lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
+            train_opts['decoder_lang_model_task'] + "/" + \
+            str(seq_model_opts["atten_dim"]) + "/" + \
+            lang_model_opts[train_opts['decoder_lang_model_task']
+                            ]['fasttext_model']
     # Directory where the checkpoints will be saved
     root_dir = os.path.join(
         'seq_2_seq_models',
