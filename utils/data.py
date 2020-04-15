@@ -253,7 +253,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     if fasttext_model is not None and tokenize_type == 'w':
 
         # Get enc_data in format List(list(int)) exactly as input to enc
-        enc_data_int = preprocess_v2id(data=copy(enc_data),
+        _, enc_data_int = preprocess_v2id(data=copy(enc_data),
                                        v2id=enc_v2id,
                                        fasttext_model=fasttext_model,
                                        add_start=add_start,
@@ -573,6 +573,7 @@ def remove_cap(dec_data):
     Lines = []
     for line in dec_data:
         Line = []
+        line = line.split(" ")
         for i, word in enumerate(line):
             if word == cap:
                 try:
