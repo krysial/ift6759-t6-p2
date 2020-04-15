@@ -36,6 +36,7 @@ logging.disable(logging.CRITICAL)
 @click.option('--dec_gru_start_train_epoch', default=None, type=int)
 @click.option('--train_split_ratio', default=None, type=float)
 @click.option('--steps_per_epoch', default=None, type=int)
+@click.option('--validation_freq', default=None, type=int)
 @click.option('--model_name', default=None)
 @click.option('--load_embedding', is_flag=True)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
@@ -47,7 +48,7 @@ def train(
     enc_checkpoint_epoch, dec_checkpoint_epoch, model_name,
     enc_embd_start_train_epoch, dec_embd_start_train_epoch,
     load_embedding, enc_gru_start_train_epoch,
-    dec_gru_start_train_epoch, steps_per_epoch,
+    dec_gru_start_train_epoch, steps_per_epoch, validation_freq,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
 ):
     DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
@@ -101,9 +102,12 @@ def train(
 
     if train_split_ratio is not None:
         train_opts['train_split_ratio'] = train_split_ratio
-
+    
     if steps_per_epoch is not None:
         train_opts['steps_per_epoch'] = steps_per_epoch
+    
+    if validation_freq is not None:
+        train_opts['validation_freq'] = validation_freq
 
     # Directory where the checkpoints will be saved
     root_dir = os.path.join(
@@ -218,7 +222,8 @@ def train(
         steps_per_epoch=train_opts['steps_per_epoch'],
         shuffle=True,
         validation_data=dataset_valid,
-        validation_steps=train_opts['steps_per_epoch']
+        validation_steps=train_opts['steps_per_epoch'],
+        validation_freq=train_opts['validation_freq']
     )
 
 
