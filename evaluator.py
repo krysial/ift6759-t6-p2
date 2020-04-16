@@ -112,13 +112,8 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
 
     # Translation Task: w2w sequence model
     Translation = seq2seq_block(
-<<<<<<< HEAD
         DT='14-20-50-00',
         model_name="GRU",
-=======
-        DT='14-01-10-15',
-        model_name="Transformer",
->>>>>>> parent of 6f669d1... Postprocessing() (#20)
         input_file=input_file_path,
         encoder_lang_model_task='unformated_en_w2w',
         decoder_lang_model_task='unformated_fr_w2w')

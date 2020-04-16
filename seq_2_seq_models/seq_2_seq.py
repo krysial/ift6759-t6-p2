@@ -120,10 +120,9 @@ class seq_2_seq_GRU(tf.keras.Model):
 
     # @tf.function(experimental_compile=True)
     def call(self, tup, targ=None, training=False):
-
         inp, targ = tup
 
-        BATCH_SIZE = inp.shape[0]
+        BATCH_SIZE = 32
         enc_hidden = self.encoder.initialize_hidden_state(BATCH_SIZE)
 
         enc_output, enc_hidden = self.encoder(inp, enc_hidden)

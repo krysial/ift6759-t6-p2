@@ -21,9 +21,10 @@ class Decoder_GRU(tf.keras.layers.Layer):
         self.lang_model = lang_model
         if lang_model is not None:
             model = tf.keras.models.load_model(
-                lang_model, custom_objects={'loss': Loss}
+                lang_model, custom_objects={'loss': Loss}, compile=False
             )
-
+            model.compile(loss=Loss)
+            
             for i in range(len(model.layers)):
                 if model.layers[i].name[:9] == 'embedding':
                     self.embedding = model.layers[i]
