@@ -40,9 +40,10 @@ except ValueError:
 @click.option('--dr', default=0.1)
 @click.option('--embedding_warmer_epoch', default=1)
 @click.option('--steps_per_epoch', default=500)
+@click.option('--embedding_dim', default=None)
 def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
           batch_size, epochs, steps_per_epoch, embedding_warmer_epoch,
-          ):
+          embedding_dim):
     with open(config_path, "r") as fd:
         config = json.load(fd)
 
@@ -57,6 +58,13 @@ def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
     config['steps_per_epoch'] = steps_per_epoch
     config['embedding_warmer_epoch'] = embedding_warmer_epoch
     config['train_split_ratio'] = train_split_ratio
+
+    if embedding_dim is not None:
+        config['embedding_dim'] = embedding_dim
+
+    if config['fasttext_model'] is not None:
+        config['fasttext_model'] = "embeddings/" + task + "/" + \
+            str(config["embedding_dim"]) + "/" + config['fasttext_model']
 
     data_file = "data/unaligned_" + task.split("_")[0] + "_" + \
         task.split("_")[1]
