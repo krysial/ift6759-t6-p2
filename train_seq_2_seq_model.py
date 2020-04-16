@@ -248,10 +248,10 @@ def train(
     os.makedirs(os.path.dirname(tb_path), exist_ok=True)
     tb_callback = tf.keras.callbacks.TensorBoard(
         log_dir=os.path.join(tb_path, DT),
-        histogram_freq=1,
+        histogram_freq=10,
         write_graph=True,
-        write_images=True,
-        embeddings_freq=2,
+        write_images=False,
+        embeddings_freq=20,
     )
     callbacks.append(tb_callback)
 
