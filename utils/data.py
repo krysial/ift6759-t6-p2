@@ -1,13 +1,12 @@
 from collections import Counter
-from tqdm import tqdm
-from copy import deepcopy as copy
+import re
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-import re
 import pandas as pd
 import numpy as np
 import os
 import json
+from tqdm import tqdm
 import gensim.models
 
 
@@ -178,7 +177,7 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
 def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type='w',
                    fasttext_model=None, enc_data=None, add_start=True, add_end=True,
                    remove_punctuation=True, lower=True, enc_v2id=None, Print=False,
-                   CAP=False, NUM=False, ALNUM=False, UPPER=False, threshold=0.5):
+                   CAP=False, NUM=False, ALNUM=False, UPPER=False):
     """
     Decodes given integer token lists to text corpus using given 
     v2id or id2v mapping.
@@ -207,8 +206,6 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
         NUM: boolean, default False. To condition special token <NUM>. For enc.
         ALNUM: boolean, default False. Condition special token <ALNUM>. For enc.
         UPPER: boolean, default False. Condition special token <UPPER>. For enc.
-        threshold: float. default is 0.5. 
-            To threshold fasttext similarity indexing. For encoder.
 
     Returns:
         dec_data: List(sentences) of shape (batch_size). Decoded sentences.
@@ -231,19 +228,8 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
     # Clean list from padding elements
     dec_data = remove_padding(dec_data, dec_v2id)
 
-    # Clean list from sos and eos elements
-    dec_data = remove_sos_eos(dec_data, dec_v2id)
-
     # Decode integer tokens to words/chars
     dec_data = decode_token_2_words(dec_data, dec_id2v, tokenize_type)
-
-    # Clean list of words from <CAP> elements
-    if CAP:
-        dec_data = remove_cap(dec_data)
-
-    # Clean list of words from <UPPER> elements
-    if UPPER:
-        dec_data = remove_upper(dec_data)
 
     # Setup fasttext model from path
     if fasttext_model is not None and isinstance(fasttext_model, str):
@@ -251,50 +237,24 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
     # Replacing <UNK> by mapping <UNK> created at input to encoder
     if fasttext_model is not None and tokenize_type == 'w':
-
-        # Get enc_data in format List(list(int)) exactly as input to enc
-        _, enc_data_int = preprocess_v2id(data=copy(enc_data),
-                                       v2id=enc_v2id,
-                                       fasttext_model=fasttext_model,
-                                       add_start=add_start,
-                                       add_end=add_end,
-                                       remove_punctuation=remove_punctuation,
-                                       lower=lower,
-                                       threshold=threshold,
-                                       CAP=False,
-                                       NUM=NUM,
-                                       ALNUM=ALNUM,
-                                       UPPER=False,
-                                       tokenize_type=tokenize_type,
-                                       post_process_usage=False)
-
         # Get enc_data in format List(list(words))
-        enc_data_words = preprocess_v2id(data=copy(enc_data),
-                                         v2id=enc_v2id,
-                                         fasttext_model=fasttext_model,
-                                         add_start=add_start,
-                                         add_end=add_end,
-                                         remove_punctuation=remove_punctuation,
-                                         lower=lower,
-                                         threshold=threshold,
-                                         tokenize_type=tokenize_type,
-                                         post_process_usage=True,
-                                         CAP=False,
-                                         NUM=False,
-                                         ALNUM=False,
-                                         UPPER=False)
 
+        enc_data = preprocess_v2id(data=enc_data,
+                                   v2id=enc_v2id,
+                                   add_start=add_start,
+                                   add_end=add_end,
+                                   remove_punctuation=remove_punctuation,
+                                   lower=lower,
+                                   tokenize_type=tokenize_type,
+                                   post_process_usage=True,
+                                   CAP=False,
+                                   NUM=False,
+                                   ALNUM=False,
+                                   UPPER=False)
         # Map predicted <UNK> with word in input
-        dec_data = deal_with_special_token(
-            dec_data, enc_data_int, enc_v2id, enc_data_words, "<UNK>")
-        # Map predicted <NUM> with word in input
-        if NUM:
-            dec_data = deal_with_special_token(
-                dec_data, enc_data_int, enc_v2id, enc_data_words, "<NUM>")
-        # Map predicted <ALNUM> with word in input
-        if ALNUM:
-            dec_data = deal_with_special_token(
-                dec_data, enc_data_int, enc_v2id, enc_data_words, "<ALNUM>")
+        # deal with all special tokens except SOS EOS PAD
+        dec_data = deal_with_UNK_pred(dec_data, enc_data, enc_v2id, dec_v2id,
+                                      fasttext_model)
 
     # Get tokens as
 
@@ -512,31 +472,15 @@ def decode_token_2_words(data, id2v, tokenize_type):
     return data
 
 
-def deal_with_special_token(dec_data, enc_data_int, enc_v2id, enc_data_words, token):
-    token_id = enc_v2id[token]
-    MAP = []
-    for i, line in enumerate(enc_data_int):
-        MAPLine = []
-        for j, word in enumerate(line):
-            if word == token_id:
-                MAPLine.append(enc_data_words[i][j])
-        MAP.append(MAPLine)
-
-    Lines = []
-    for i, line in enumerate(dec_data):
-        Line = []
-        for j, word in enumerate(line):
-            if word == token:
-                try:
-                    word = MAP[i][j]
-                    Line.append(word)
-                except IndexError:
-                    pass
-            else:
-                Line.append(word)
-        Lines.append(Line)
-
-    return Lines
+def deal_with_UNK_pred(dec_data, enc_data, enc_v2id, dec_v2id, fasttext_model):
+    """
+    dec_data: List(list(words))
+    enc_data: List(list(words))
+    """
+    # Get id of <UNK> in both encoder and decoder ends
+    enc_UNK = enc_v2id['<UNK>']
+    dec_UNK = dec_v2id['<UNK>']
+    return dec_data
 
 
 def write_file(data, output):
@@ -558,46 +502,3 @@ def remove_padding(Data, v2id):
     pad = v2id['<PAD>']
     data_without_pad = [[d for d in data if d != pad] for data in Data]
     return data_without_pad
-
-
-def remove_sos_eos(Data, v2id):
-    sos = v2id['<SOS>']
-    eos = v2id['<EOS>']
-    data_without_sos_eos = [[d for d in data if (
-        d != sos) and (d != eos)] for data in Data]
-    return data_without_sos_eos
-
-
-def remove_cap(dec_data):
-    cap = "<CAP>"
-    Lines = []
-    for line in dec_data:
-        Line = []
-        line = line.split(" ")
-        for i, word in enumerate(line):
-            if word == cap:
-                try:
-                    line[i+1] = line[i+1][0].upper() + line[i+1][1:]
-                except IndexError:
-                    pass
-            else:
-                Line.append(word)
-        Lines.append(Line)
-    return Lines
-
-
-def remove_upper(dec_data):
-    UP = "<UPPER>"
-    Lines = []
-    for line in dec_data:
-        Line = []
-        for i, word in enumerate(line):
-            if word == UP:
-                try:
-                    line[i+1] = line[i+1].upper()
-                except IndexError:
-                    pass
-            else:
-                Line.append(word)
-        Lines.append(Line)
-    return Lines
