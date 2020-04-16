@@ -28,7 +28,7 @@
     "formated_fr_w2w": {
         "max_seq": null,
         "vocab_size": 25000,
-        "remove_punctuation": true,
+        "remove_punctuation": false,
         "embedding_dim": 8,
         "fasttext_model":"unaligned_formated_fr",
         "CAP":true,
