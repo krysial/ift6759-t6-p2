@@ -296,7 +296,8 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
             dec_data = deal_with_special_token(
                 dec_data, enc_data_int, enc_v2id, enc_data_words, "<ALNUM>")
 
-    # Get tokens as
+    # Get tokens as part of sentence from dec_data(List(list(tokens))->list(sentence))
+    dec_data = [" ".join(line) for line in dec_data]
 
     if Print:
         print("\nPredictions are as follows:\n")
