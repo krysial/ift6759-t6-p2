@@ -45,6 +45,8 @@ logging.disable(logging.CRITICAL)
 @click.option('--enc_embedding_dim', default=None, type=int)
 @click.option('--dec_embedding_dim', default=None, type=int)
 @click.option('--model_name', default=None)
+@click.option('--enc_datafile', default=None)
+@click.option('--dec_datafile', default=None)
 @click.option('--load_embedding', is_flag=True)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
 @click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
@@ -58,7 +60,7 @@ def train(
     dec_gru_start_train_epoch, steps_per_epoch, validation_freq,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
     num_layers, atten_dim, num_heads, ff_dim, enc_embedding_dim,
-    dec_embedding_dim
+    dec_embedding_dim, enc_datafile, dec_datafile
 ):
     DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
 
@@ -192,16 +194,27 @@ def train(
     lang_model_opts[train_opts['decoder_lang_model_task']
                     ]['tokenize_type'] = list(train_opts['decoder_lang_model_task'])[-1]
 
-    lang_model_opts[train_opts['encoder_lang_model_task']]['data_file'] = os.path.join(
-        "data",
-        "aligned_" + train_opts['encoder_lang_model_task'].split("_")[0] + "_" +
-        train_opts['encoder_lang_model_task'].split("_")[1]
-    )
-    lang_model_opts[train_opts['decoder_lang_model_task']]['data_file'] = os.path.join(
-        "data",
-        "aligned_" + train_opts['decoder_lang_model_task'].split("_")[0] +
-        "_" + train_opts['decoder_lang_model_task'].split("_")[1]
-    )
+    if enc_datafile is not None:
+        lang_model_opts[train_opts['encoder_lang_model_task']
+                        ]['data_file'] = enc_datafile
+
+    elif enc_datafile is None:
+        lang_model_opts[train_opts['encoder_lang_model_task']]['data_file'] = os.path.join(
+            "data",
+            "aligned_" + train_opts['encoder_lang_model_task'].split("_")[0] + "_" +
+            train_opts['encoder_lang_model_task'].split("_")[1]
+        )
+
+    if dec_datafile is not None:
+        lang_model_opts[train_opts['decoder_lang_model_task']
+                        ]['data_file'] = dec_datafile
+
+    elif dec_datafile is None:
+        lang_model_opts[train_opts['decoder_lang_model_task']]['data_file'] = os.path.join(
+            "data",
+            "aligned_" + train_opts['decoder_lang_model_task'].split("_")[0] +
+            "_" + train_opts['decoder_lang_model_task'].split("_")[1]
+        )
 
     ###########
 
@@ -235,10 +248,10 @@ def train(
     os.makedirs(os.path.dirname(tb_path), exist_ok=True)
     tb_callback = tf.keras.callbacks.TensorBoard(
         log_dir=os.path.join(tb_path, DT),
-        histogram_freq=1,
+        histogram_freq=10,
         write_graph=True,
-        write_images=True,
-        embeddings_freq=2,
+        write_images=False,
+        embeddings_freq=20,
     )
     callbacks.append(tb_callback)
 
