@@ -8,7 +8,7 @@
   "load_embedding": false,
   "model_name": "Transformer",
   "encoder_lang_model_task": "unformated_en_w2w",
-  "decoder_lang_model_task": "unformated_fr_w2w",
+  "decoder_lang_model_task": "formated_fr_w2w",
   "teacher_forcing_ratio": 0.5,
   "validation_freq": 1
 }
