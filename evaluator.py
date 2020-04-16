@@ -115,15 +115,15 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
 
     # Translation Task: w2w sequence model
     Translation = seq2seq_block(
-        DT='15-15-26-39',
-        model_name="Transformer",
+        DT='14-20-50-00',
+        model_name="GRU",
         input_file=input_file_path,
         encoder_lang_model_task='unformated_en_w2w',
         decoder_lang_model_task='unformated_fr_w2w')
 
     # Punctuation Task: c2c sequence model
     Punctuated_Translation = seq2seq_block(
-        DT='14-01-07-46',
+        DT='15-00-11-46',
         model_name="GRU",
         input_file=Translation,
         encoder_lang_model_task='unformated_fr_c2c',
