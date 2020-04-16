@@ -70,6 +70,9 @@ def seq2seq_block(DT, model_name, encoder_lang_model_task,
             train_opts['encoder_lang_model_task']
         ]['fasttext_model'],
         enc_data=input_file,
+        threshold=lang_model_opts[
+            train_opts['encoder_lang_model_task']
+        ]['threshold'],
         remove_punctuation=lang_model_opts[
             train_opts['encoder_lang_model_task']
         ]['remove_punctuation'],
@@ -112,7 +115,7 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
 
     # Translation Task: w2w sequence model
     Translation = seq2seq_block(
-        DT='14-01-10-15',
+        DT='15-15-26-39',
         model_name="Transformer",
         input_file=input_file_path,
         encoder_lang_model_task='unformated_en_w2w',
