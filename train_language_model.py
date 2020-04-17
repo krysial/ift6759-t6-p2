@@ -40,7 +40,7 @@ except ValueError:
 @click.option('--dr', default=0.1)
 @click.option('--embedding_warmer_epoch', default=1)
 @click.option('--steps_per_epoch', default=500)
-@click.option('--embedding_dim', default=None)
+@click.option('--embedding_dim', default=None, type=int)
 def train(task, config_path, units, lr, dr, model_name, train_split_ratio,
           batch_size, epochs, steps_per_epoch, embedding_warmer_epoch,
           embedding_dim):

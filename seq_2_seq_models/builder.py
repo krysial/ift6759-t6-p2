@@ -28,6 +28,20 @@ def loss_function_Transformer(real, pred):
     return tf.reduce_sum(loss_) / tf.reduce_sum(mask)
 
 
+class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+# https://www.tensorflow.org/tutorials/text/transformer#optimizer
+    def __init__(self, d_model, warmup_steps=4000):
+        super(CustomSchedule, self).__init__()
+        self.d_model = d_model
+        self.d_model = tf.cast(self.d_model, tf.float32)
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps ** -1.5)
+        return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
+
+
 def get_model(model_name, train_opts, seq_model_opts,
               encoder_lang_config, decoder_lang_config):
 
@@ -49,6 +63,8 @@ def get_model(model_name, train_opts, seq_model_opts,
     elif model_name == "GRU":
         loss_function = loss_function_GRU
 
+    if train_opts['lr'] is None and model_name == "Transformer":
+        train_opts['lr'] = CustomSchedule(d_model=seq_model_opts['atten_dim'])
     optimizer = tf.keras.optimizers.Adam(
         train_opts['lr'], beta_1=0.9, beta_2=0.98, epsilon=1e-9)
     model.compile(optimizer=optimizer,

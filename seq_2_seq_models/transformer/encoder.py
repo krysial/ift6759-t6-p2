@@ -13,9 +13,10 @@ class Encoder(tf.keras.layers.Layer):
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
+        self.encoder_embedding_dim = opts.encoder_embedding_dim
         self.dense = tf.keras.layers.Dense(opts.atten_dim)
-        self.embedding = tf.keras.layers.Embedding(vocab_size, opts.encoder_embedding_dim)  # mask_zero=True
-        self.pos_encoding = positional_encoding(max_input_seq_len, opts.encoder_embedding_dim)
+        self.embedding = tf.keras.layers.Embedding(vocab_size, self.encoder_embedding_dim)  # mask_zero=True
+        self.pos_encoding = positional_encoding(max_input_seq_len, self.encoder_embedding_dim)
         self.dropout = tf.keras.layers.Dropout(dropout_rate)
         self.dropout1 = tf.keras.layers.Dropout(dropout_rate)
 
