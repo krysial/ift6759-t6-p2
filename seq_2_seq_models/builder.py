@@ -52,7 +52,7 @@ def get_model(model_name, train_opts, seq_model_opts,
     optimizer = tf.keras.optimizers.Adam(
         train_opts['lr'], beta_1=0.9, beta_2=0.98, epsilon=1e-9)
     model.compile(optimizer=optimizer,
-                  loss=loss_function, run_eagerly=True)
+                  loss=loss_function, run_eagerly=False)
     return model
 
 

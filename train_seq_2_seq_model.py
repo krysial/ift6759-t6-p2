@@ -13,6 +13,12 @@ import json
 import logging
 import datetime
 
+resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
+tf.config.experimental_connect_to_cluster(resolver)
+# This is the TPU initialization code that has to be at the beginning.
+tf.tpu.experimental.initialize_tpu_system(resolver)
+strategy = tf.distribute.experimental.TPUStrategy(resolver)
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -238,7 +244,7 @@ def train(
     callbacks = []
 
     checkpoint_callback = checkpointer(filepath=checkpoint_dir)
-    callbacks.append(checkpoint_callback)
+    # callbacks.append(checkpoint_callback)
 
     csv_logger_callback = tf.keras.callbacks.CSVLogger(
         os.path.join(checkpoint_dir, DT + '.log'))
@@ -253,7 +259,7 @@ def train(
         write_images=False,
         embeddings_freq=20,
     )
-    callbacks.append(tb_callback)
+    # callbacks.append(tb_callback)
 
     if train_opts['load_embedding'] and \
             lang_model_opts[encoder_lang_model_task]['fasttext_model'] is not None and \
@@ -276,15 +282,16 @@ def train(
             dec_gru_start_train_epoch=seq_model_opts['decoder_config']['dec_gru_start_train_epoch'])
         callbacks.append(GRU_attn_warmer_callback)
 
-    model = get_model(
-        model_name=train_opts['model_name'],
-        train_opts=train_opts,
-        seq_model_opts=seq_model_opts,
-        encoder_lang_config=lang_model_opts[train_opts['encoder_lang_model_task']],
-        decoder_lang_config=lang_model_opts[train_opts['decoder_lang_model_task']],
-    )
+    with strategy.scope():
+        model = get_model(
+            model_name=train_opts['model_name'],
+            train_opts=train_opts,
+            seq_model_opts=seq_model_opts,
+            encoder_lang_config=lang_model_opts[train_opts['encoder_lang_model_task']],
+            decoder_lang_config=lang_model_opts[train_opts['decoder_lang_model_task']],
+        )
 
-    print("#### Model Loaded ####")
+        print("#### Model Loaded ####")
 
     history = model.fit(
         dataset_train,
@@ -297,6 +304,8 @@ def train(
         validation_steps=train_opts['steps_per_epoch'],
         validation_freq=train_opts['validation_freq']
     )
+
+    model.save_weights(checkpoint_dir + '/transformer_weights.h5', overwrite=True)
 
 
 if __name__ == '__main__':
