@@ -143,33 +143,20 @@ def train(
         lang_model_opts[train_opts['decoder_lang_model_task']
                         ]['embedding_dim'] = dec_embedding_dim
 
-    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
+    if lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
         lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
             train_opts['encoder_lang_model_task'] + "/" + \
             str(lang_model_opts[train_opts['encoder_lang_model_task']]["embedding_dim"]) + "/" + \
             lang_model_opts[train_opts['encoder_lang_model_task']
                             ]['fasttext_model']
 
-    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
+    if lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
         lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
             train_opts['decoder_lang_model_task'] + "/" + \
             str(lang_model_opts[train_opts['decoder_lang_model_task']]["embedding_dim"]) + "/" + \
             lang_model_opts[train_opts['decoder_lang_model_task']
                             ]['fasttext_model']
 
-    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
-        lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
-            train_opts['encoder_lang_model_task'] + "/" + \
-            str(seq_model_opts["atten_dim"]) + "/" + \
-            lang_model_opts[train_opts['encoder_lang_model_task']
-                            ]['fasttext_model']
-
-    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
-        lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
-            train_opts['decoder_lang_model_task'] + "/" + \
-            str(seq_model_opts["atten_dim"]) + "/" + \
-            lang_model_opts[train_opts['decoder_lang_model_task']
-                            ]['fasttext_model']
     # Directory where the checkpoints will be saved
     root_dir = os.path.join(
         'seq_2_seq_models',

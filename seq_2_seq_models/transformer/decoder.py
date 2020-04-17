@@ -14,18 +14,22 @@ class Decoder(tf.keras.layers.Layer):
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
-        self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
-        self.pos_encoding = positional_encoding(max_target_seq_len, opts.atten_dim)
+        self.dense = tf.keras.layers.Dense(opts.atten_dim)
+        self.embedding = tf.keras.layers.Embedding(vocab_size, opts.decoder_embedding_dim)  # mask_zero=True
+        self.pos_encoding = positional_encoding(max_target_seq_len, opts.decoder_embedding_dim)
         self.dropout = tf.keras.layers.Dropout(rate)
+        self.dropout1 = tf.keras.layers.Dropout(rate)
 
         self.dec_layers = [DecoderLayer(opts) for _ in range(opts.num_layers)]
 
     def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_pad, training=True):
         seq_len = tf.shape(targets)[1]
         x = self.embedding(targets)
-        x *= tf.math.sqrt(tf.cast(self.atten_dim, tf.float32))  # TODO: check why
+        x *= tf.math.sqrt(tf.cast(self.decoder_embedding_dim, tf.float32))  # TODO: check why
         x += self.pos_encoding[:, :seq_len, :]
         x = self.dropout(x, training=training)
+        x = self.dense(x)
+        x = self.dropout1(x, training=training)
 
         for i in range(self.num_layers):
             x = self.dec_layers[i](x, enc_output, enc_mask_pad, target_look_ahead_pad, training)
