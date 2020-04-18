@@ -174,7 +174,6 @@ def train(
 
     # Directory where the checkpoints will be saved
     root_dir = os.path.join(
-        os.getcwd(),
         'seq_2_seq_models',
         train_opts['encoder_lang_model_task'][:-4] + "_2_" +
         train_opts['decoder_lang_model_task'][:-4] + "_" +
@@ -183,12 +182,6 @@ def train(
         train_opts['model_name']
     )
     checkpoint_dir = os.path.join(root_dir, DT)
-
-    tb_path = os.path.join(root_dir, "tensorboard")
-    os.makedirs(os.path.dirname(tb_path), exist_ok=True)
-    tb_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=os.path.join(tb_path, DT)
-    )
 
     ##########
     # ENCODER-DECODER LANG CONFIG
@@ -253,7 +246,16 @@ def train(
         os.path.join(checkpoint_dir, DT + '.log'))
     callbacks.append(csv_logger_callback)
 
-    callbacks.append(tb_callback)
+    tb_path = os.path.join(root_dir, "tensorboard")
+    os.makedirs(os.path.dirname(tb_path), exist_ok=True)
+    tb_callback = tf.keras.callbacks.TensorBoard(
+        log_dir=os.path.join(tb_path, DT),
+        histogram_freq=10,
+        write_graph=True,
+        write_images=False,
+        embeddings_freq=20,
+    )
+    # callbacks.append(tb_callback)
 
     if train_opts['load_embedding'] and \
             lang_model_opts[encoder_lang_model_task]['fasttext_model'] is not None and \
@@ -282,7 +284,7 @@ def train(
         seq_model_opts=seq_model_opts,
         encoder_lang_config=lang_model_opts[train_opts['encoder_lang_model_task']],
         decoder_lang_config=lang_model_opts[train_opts['decoder_lang_model_task']],
-        )
+    )
 
     print("#### Model Loaded ####")
 
