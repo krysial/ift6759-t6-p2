@@ -9,14 +9,14 @@ from seq_2_seq_models.transformer.utils import point_wise_feed_forward_network, 
 
 class Decoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#decoder
-    def __init__(self, vocab_size, max_target_seq_len, opts, rate=0.1):
+    def __init__(self, vocab_size, max_target_seq_len, opts):
         super().__init__()
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
         self.pos_encoding = positional_encoding(max_target_seq_len, opts.atten_dim)
-        self.dropout = tf.keras.layers.Dropout(rate)
+        self.dropout = tf.keras.layers.Dropout(opts.embed_dr)
 
         self.dec_layers = [DecoderLayer(opts) for _ in range(opts.num_layers)]
 
@@ -35,7 +35,7 @@ class Decoder(tf.keras.layers.Layer):
 
 class DecoderLayer(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#decoder_layer
-    def __init__(self, opts, rate=0.1):
+    def __init__(self, opts):
         super().__init__()
 
         self.masked_multihead_attention = MultiHeadAttention(opts.num_heads, opts.atten_dim)
@@ -46,9 +46,9 @@ class DecoderLayer(tf.keras.layers.Layer):
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.layernorm3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
 
-        self.dropout1 = tf.keras.layers.Dropout(rate)
-        self.dropout2 = tf.keras.layers.Dropout(rate)
-        self.dropout3 = tf.keras.layers.Dropout(rate)
+        self.dropout1 = tf.keras.layers.Dropout(opts.ff_dr)
+        self.dropout2 = tf.keras.layers.Dropout(opts.ff_dr)
+        self.dropout3 = tf.keras.layers.Dropout(opts.ff_dr)
 
     def call(self, targets, enc_output, enc_mask_pad, target_look_ahead_mask, training=True):
         q, _ = self.masked_multihead_attention(targets, targets, targets, target_look_ahead_mask)

@@ -52,7 +52,7 @@ def get_model(model_name, train_opts, seq_model_opts,
     optimizer = tf.keras.optimizers.Adam(
         train_opts['lr'], beta_1=0.9, beta_2=0.98, epsilon=1e-9)
     model.compile(optimizer=optimizer,
-                  loss=loss_function, run_eagerly=True)
+                  loss=loss_function) #, run_eagerly=True)
     return model
 
 
@@ -61,6 +61,8 @@ def get_model_Transformer(model_name, seq_model_opts, train_opts,
 
     opts = SimpleNamespace(**seq_model_opts)
     opts.teacher_forcing_ratio = train_opts['teacher_forcing_ratio']
+    opts.embed_dr = train_opts['embed_dr']
+    opts.ff_dr = train_opts['ff_dr']
     transformer = Transformer(
         max_input_seq_len=encoder_lang_config["max_seq"],
         input_vocab_size=encoder_lang_config["vocab_size"],

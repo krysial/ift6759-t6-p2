@@ -51,6 +51,10 @@ logging.disable(logging.CRITICAL)
 @click.option('--lang_model_opts_path', default='config/language_models.json')
 @click.option('--seq_model_opts_path', default='config/seq_2_seq_model.json')
 @click.option('--train_opts_path', default='config/train_seq_2_seq_config.json')
+@click.option('--exp_num', default=None)
+@click.option('--teacher_forcing_ratio', default=None, type=float)
+@click.option('--embed_dr', default=None, type=float)
+@click.option('--ff_dr', default=None, type=float)
 def train(
     encoder_lang_model_task, decoder_lang_model_task,
     batch_size, epochs, lr, dr, train_split_ratio,
@@ -60,13 +64,21 @@ def train(
     dec_gru_start_train_epoch, steps_per_epoch, validation_freq,
     lang_model_opts_path, seq_model_opts_path, train_opts_path,
     num_layers, atten_dim, num_heads, ff_dim, enc_embedding_dim,
-    dec_embedding_dim, enc_datafile, dec_datafile
+    dec_embedding_dim, enc_datafile, dec_datafile, exp_num, teacher_forcing_ratio, embed_dr, ff_dr
 ):
     DT = datetime.datetime.now().strftime("%d-%H-%M-%S")
+    if exp_num is not None:
+        DT = DT + "_" + exp_num
 
     lang_model_opts = load_json(lang_model_opts_path)
     train_opts = load_json(train_opts_path)
     seq_model_opts = load_json(seq_model_opts_path)
+
+    if embed_dr is not None:
+        train_opts['embed_dr'] = embed_dr
+
+    if ff_dr is not None:
+        train_opts['ff_dr'] = ff_dr
 
     if model_name is not None:
         train_opts['model_name'] = model_name
@@ -92,6 +104,9 @@ def train(
 
     if load_embedding:
         train_opts['load_embedding'] = load_embedding
+
+    if teacher_forcing_ratio is not None:
+        train_opts['teacher_forcing_ratio'] = teacher_forcing_ratio
 
     if train_opts['model_name'] == "GRU" and units is not None:
         seq_model_opts['units'] = units
@@ -143,35 +158,23 @@ def train(
         lang_model_opts[train_opts['decoder_lang_model_task']
                         ]['embedding_dim'] = dec_embedding_dim
 
-    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
+    if lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
         lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
             train_opts['encoder_lang_model_task'] + "/" + \
             str(lang_model_opts[train_opts['encoder_lang_model_task']]["embedding_dim"]) + "/" + \
             lang_model_opts[train_opts['encoder_lang_model_task']
                             ]['fasttext_model']
 
-    if train_opts['model_name'] == "GRU" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
+    if lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
         lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
             train_opts['decoder_lang_model_task'] + "/" + \
             str(lang_model_opts[train_opts['decoder_lang_model_task']]["embedding_dim"]) + "/" + \
             lang_model_opts[train_opts['decoder_lang_model_task']
                             ]['fasttext_model']
 
-    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] is not None:
-        lang_model_opts[train_opts['encoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
-            train_opts['encoder_lang_model_task'] + "/" + \
-            str(seq_model_opts["atten_dim"]) + "/" + \
-            lang_model_opts[train_opts['encoder_lang_model_task']
-                            ]['fasttext_model']
-
-    if train_opts['model_name'] == "Transformer" and lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] is not None:
-        lang_model_opts[train_opts['decoder_lang_model_task']]['fasttext_model'] = "embeddings/" + \
-            train_opts['decoder_lang_model_task'] + "/" + \
-            str(seq_model_opts["atten_dim"]) + "/" + \
-            lang_model_opts[train_opts['decoder_lang_model_task']
-                            ]['fasttext_model']
     # Directory where the checkpoints will be saved
     root_dir = os.path.join(
+        os.getcwd(),
         'seq_2_seq_models',
         train_opts['encoder_lang_model_task'][:-4] + "_2_" +
         train_opts['decoder_lang_model_task'][:-4] + "_" +
@@ -180,6 +183,12 @@ def train(
         train_opts['model_name']
     )
     checkpoint_dir = os.path.join(root_dir, DT)
+
+    tb_path = os.path.join(root_dir, "tensorboard")
+    os.makedirs(os.path.dirname(tb_path), exist_ok=True)
+    tb_callback = tf.keras.callbacks.TensorBoard(
+        log_dir=os.path.join(tb_path, DT)
+    )
 
     ##########
     # ENCODER-DECODER LANG CONFIG
@@ -238,21 +247,12 @@ def train(
     callbacks = []
 
     checkpoint_callback = checkpointer(filepath=checkpoint_dir)
-    callbacks.append(checkpoint_callback)
+    # callbacks.append(checkpoint_callback)
 
     csv_logger_callback = tf.keras.callbacks.CSVLogger(
         os.path.join(checkpoint_dir, DT + '.log'))
     callbacks.append(csv_logger_callback)
 
-    tb_path = os.path.join(root_dir, "tensorboard")
-    os.makedirs(os.path.dirname(tb_path), exist_ok=True)
-    tb_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=os.path.join(tb_path, DT),
-        histogram_freq=10,
-        write_graph=True,
-        write_images=False,
-        embeddings_freq=20,
-    )
     callbacks.append(tb_callback)
 
     if train_opts['load_embedding'] and \
@@ -282,7 +282,7 @@ def train(
         seq_model_opts=seq_model_opts,
         encoder_lang_config=lang_model_opts[train_opts['encoder_lang_model_task']],
         decoder_lang_config=lang_model_opts[train_opts['decoder_lang_model_task']],
-    )
+        )
 
     print("#### Model Loaded ####")
 
@@ -294,9 +294,10 @@ def train(
         steps_per_epoch=train_opts['steps_per_epoch'],
         shuffle=True,
         validation_data=dataset_valid,
-        validation_steps=train_opts['steps_per_epoch'],
+        validation_steps=train_opts['vsteps_per_epoch'],
         validation_freq=train_opts['validation_freq']
     )
+    model.summary()
 
 
 if __name__ == '__main__':

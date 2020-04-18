@@ -77,6 +77,9 @@ def get_dataset_train(
     if train_opts['steps_per_epoch'] is None:
         train_opts['steps_per_epoch'] = len(
             input_tensor_train)//train_opts['batch_size']
+    if train_opts['vsteps_per_epoch'] is None:
+        train_opts['vsteps_per_epoch'] = len(
+            input_tensor_valid)//train_opts['batch_size']
 
     lang_model_opts[encoder_lang_model_task]['max_seq'] = encoder_dataset.shape[-1]
     lang_model_opts[decoder_lang_model_task]['max_seq'] = decoder_dataset.shape[-1]
