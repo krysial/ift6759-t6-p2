@@ -80,15 +80,21 @@ def seq2seq_block(DT, model_name, encoder_lang_model_task,
         train_opts['model_name'], DT
     )
 
-    ckpt = tf.train.Checkpoint(
-        model=model, optimizer=model.optimizer)
+    # ckpt = tf.train.Checkpoint(
+    #     model=model, optimizer=model.optimizer)
 
-    ckpt_manager = tf.train.CheckpointManager(
-        ckpt, checkpoint_dir, max_to_keep=5)
+    # ckpt_manager = tf.train.CheckpointManager(
+    #     ckpt, checkpoint_dir, max_to_keep=5)
 
     # if a checkpoint exists, restore the latest checkpoint.
-    if ckpt_manager.latest_checkpoint:
-        ckpt.restore(ckpt_manager.latest_checkpoint)
+    # if ckpt_manager.latest_checkpoint:
+    #     ckpt.restore(ckpt_manager.latest_checkpoint)
+    model.predict(dataset.take(1))
+    model.load_weights(checkpoint_dir + '/transformer_weights.h5')
+
+    # if a checkpoint exists, restore the latest checkpoint.
+    #if ckpt_manager.latest_checkpoint:
+    #    ckpt.restore(ckpt_manager.latest_checkpoint)
 
     predictions = tf.argmax(model.predict(dataset, verbose=1), axis=-1)
 

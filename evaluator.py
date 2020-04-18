@@ -22,7 +22,8 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     # Complete Translation as word2word sequence model
     from utils.evaluation import Model1
     Translation = Model1(input_file=input_file_path,
-                         translator_DT="15-15-26-39")
+                         output_file=pred_file_path,
+                         translator_DT="17-22-40-37")
 
     # # Translator-Punctuator word2word and char2cha model
     # from utils.evaluation import Model2
