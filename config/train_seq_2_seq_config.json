@@ -4,11 +4,14 @@
   "batch_size": 64,
   "epochs": 10,
   "steps_per_epoch": null,
+  "vsteps_per_epoch": null,
   "train_split_ratio": 0.2,
   "load_embedding": false,
   "model_name": "Transformer",
   "encoder_lang_model_task": "unformated_en_w2w",
   "decoder_lang_model_task": "formated_fr_w2w",
   "teacher_forcing_ratio": 0.5,
-  "validation_freq": 1
+  "validation_freq": 1,
+  "embed_dr": 0.2,
+  "ff_dr": 0.5
 }

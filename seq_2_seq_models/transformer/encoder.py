@@ -8,14 +8,14 @@ from seq_2_seq_models.transformer.multihead_attention import MultiHeadAttention
 
 class Encoder(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#encoder
-    def __init__(self, vocab_size, max_input_seq_len, opts, dropout_rate=0.1):
+    def __init__(self, vocab_size, max_input_seq_len, opts):
         super().__init__()
 
         self.num_layers = opts.num_layers
         self.atten_dim = opts.atten_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, opts.atten_dim)  # mask_zero=True
         self.pos_encoding = positional_encoding(max_input_seq_len, opts.atten_dim)
-        self.dropout = tf.keras.layers.Dropout(dropout_rate)
+        self.dropout = tf.keras.layers.Dropout(opts.embed_dr)
 
         self.enc_layers = [EncoderLayer(opts) for _ in range(opts.num_layers)]
 
@@ -34,13 +34,13 @@ class Encoder(tf.keras.layers.Layer):
 
 class EncoderLayer(tf.keras.layers.Layer):
     # https://www.tensorflow.org/tutorials/text/transformer#encoder_layer
-    def __init__(self, opts, rate=0.1):  # num_heads, atten_dim, ff_dim
+    def __init__(self, opts):  # num_heads, atten_dim, ff_dim
         super().__init__()
         self.multihead_attention = MultiHeadAttention(opts.num_heads, opts.atten_dim)
         self.ffn = point_wise_feed_forward_network(opts.atten_dim, opts.ff_dim)
 
-        self.dropout1 = tf.keras.layers.Dropout(rate)
-        self.dropout2 = tf.keras.layers.Dropout(rate)
+        self.dropout1 = tf.keras.layers.Dropout(opts.ff_dr)
+        self.dropout2 = tf.keras.layers.Dropout(opts.ff_dr)
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
 
