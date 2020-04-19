@@ -76,9 +76,9 @@ def translate(inputfile, pred_file_path,
 
     def get_gen(data, batch_size):
         def data_word_generator():
-            ch_data = checkout_data(data)[int(-11000*0.2):]
+            ch_data = checkout_data(data)
             size = len(ch_data)
-            steps = size//batch_size + 1
+            steps = size//batch_size
             init = 0
             end = batch_size
             for i in range(steps):
@@ -95,6 +95,7 @@ def translate(inputfile, pred_file_path,
 
     f = open(pred_file_path, "w")
     for enc_data_words in tqdm(enc_gen):
+        print("end data words: ", enc_data_words)
         enc_data_int, _, _ = encoder_preprocess(data=enc_data_words)
         out, _ = evaluate(enc_data_int)
         out_words = postprocessing(
@@ -112,5 +113,6 @@ def translate(inputfile, pred_file_path,
             UPPER=True,
             enc_v2id=encoder_v2id
         )
+        print(out_words)
         f.write(' '.join(out_words))
     f.close()
