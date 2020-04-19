@@ -41,11 +41,11 @@ def translate(inputfile, pred_file_path,
 
     # if a checkpoint exists, restore the latest checkpoint.
     if ckpt_manager.latest_checkpoint:
-        ckpt.restore(ckpt_manager.latest_checkpoint)
+        ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
         print('Latest checkpoint restored!!')
 
-    def evaluate(encoder_input):
-        output = np.array([decoder_v2id['<SOS>']]*batch_size).reshape(-1, 1)
+    def evaluate(encoder_input, batch_size):
+        output = np.array([decoder_v2id['<SOS>']]*encoder_input.shape[0]).reshape(-1, 1)
         MAX_LENGTH = encoder_input.shape[-1]
 
         for i in range(MAX_LENGTH):
@@ -78,13 +78,14 @@ def translate(inputfile, pred_file_path,
         def data_word_generator():
             ch_data = checkout_data(data)
             size = len(ch_data)
-            steps = size//batch_size
+            bs = min(size, batch_size)
+            steps = size//bs
             init = 0
-            end = batch_size
+            end = bs
             for i in range(steps):
                 to_return = ch_data[init:end]
                 init = end
-                end += batch_size
+                end += bs
                 yield to_return
         return data_word_generator()
 
@@ -96,7 +97,7 @@ def translate(inputfile, pred_file_path,
     f = open(pred_file_path, "w")
     for enc_data_words in tqdm(enc_gen):
         enc_data_int, _, _ = encoder_preprocess(data=enc_data_words)
-        out, _ = evaluate(enc_data_int)
+        out, _ = evaluate(enc_data_int, batch_size)
         out_words = postprocessing(
             dec_data=out,
             dec_v2id=decoder_v2id,
