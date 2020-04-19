@@ -18,19 +18,18 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     Returns: None
 
     """
+    num_layers = 2
+    d_model = 128
+    dff = 512
+    num_heads = 16
+    dropout_rate = 0.3
+    batch_size = 4
 
-    # Complete Translation as word2word sequence model
-    from utils.evaluation import Model1
-    Translation = Model1(input_file=input_file_path,
-                         translator_DT="15-15-26-39")
-
-    # # Translator-Punctuator word2word and char2cha model
-    # from utils.evaluation import Model2
-    # Translation = Model2(input_file=input_file_path,
-    #                      translator_DT="15-15-26-39",
-    #                      punctuator_DT="14-01-07-46")
-
-    return Translation
+    from utils.evaluation import translate
+    translate(
+        input_file_path, pred_file_path, num_layers, d_model, num_heads, dff,
+        dropout_rate=dropout_rate, batch_size=batch_size
+    )
 
 
 def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: bool):
