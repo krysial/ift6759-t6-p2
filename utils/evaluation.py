@@ -113,5 +113,6 @@ def translate(inputfile, pred_file_path,
             UPPER=True,
             enc_v2id=encoder_v2id
         )
+        out_words.append('\n')
         f.write(' '.join(out_words))
     f.close()
