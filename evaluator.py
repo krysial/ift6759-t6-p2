@@ -23,7 +23,7 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     dff = 512
     num_heads = 16
     dropout_rate = 0.3
-    batch_size = 64
+    batch_size = 4
 
     from utils.evaluation import translate
     translate(
