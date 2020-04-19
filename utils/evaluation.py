@@ -95,7 +95,6 @@ def translate(inputfile, pred_file_path,
 
     f = open(pred_file_path, "w")
     for enc_data_words in tqdm(enc_gen):
-        print("end data words: ", enc_data_words)
         enc_data_int, _, _ = encoder_preprocess(data=enc_data_words)
         out, _ = evaluate(enc_data_int)
         out_words = postprocessing(
@@ -113,6 +112,5 @@ def translate(inputfile, pred_file_path,
             UPPER=True,
             enc_v2id=encoder_v2id
         )
-        print(out_words)
         f.write(' '.join(out_words))
     f.close()
