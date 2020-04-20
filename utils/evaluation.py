@@ -44,34 +44,61 @@ def translate(inputfile, pred_file_path,
         ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
         print('Latest checkpoint restored!!')
 
-    def evaluate(encoder_input, batch_size):
-        output = np.array([decoder_v2id['<SOS>']]*encoder_input.shape[0]).reshape(-1, 1)
+    def evaluate(encoder_input, batch_size, k=5):
+        batch_size = encoder_input.shape[0]
         MAX_LENGTH = encoder_input.shape[-1]
+        queue = [
+            (
+                np.array([decoder_v2id['<SOS>']]*batch_size).reshape(-1, 1),
+                np.ones((batch_size, 1))
+            )
+        ]
 
         for i in range(MAX_LENGTH):
-            enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
-                encoder_input, output)
+            new_queue = []
+            while len(queue) > 0:
+                candidate_batch, probs = queue.pop()
+                last_token_batch = tf.expand_dims(candidate_batch[:, -1], 1)
 
-            # predictions.shape == (batch_size, seq_len, vocab_size)
-            predictions, attention_weights = transformer(encoder_input,
-                                                         output,
-                                                         False,
-                                                         enc_padding_mask,
-                                                         combined_mask,
-                                                         dec_padding_mask)
+                (
+                    enc_padding_mask, combined_mask, dec_padding_mask
+                ) = create_masks(
+                    encoder_input, last_token_batch
+                )
 
-            # select the last word from the seq_len dimension
-            predictions = predictions[:, -1:, :]  # (batch_size, 1, vocab_size)
-            predicted_id = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
+                # predictions.shape == (batch_size, seq_len, vocab_size)
+                (
+                    predictions, attention_weights
+                ) = transformer(encoder_input,
+                                last_token_batch,
+                                False,
+                                enc_padding_mask,
+                                combined_mask,
+                                dec_padding_mask)
 
-            # return the result if the predicted_id is equal to the end token
-            # if predicted_id == tokenizer_en.vocab_size+1:
-            #   return output, attention_weights
+                # select the last word from the seq_len dimension
+                predictions = tf.nn.softmax(predictions[:, -1:, :], axis=2)  # (batch_size, 1, vocab_size)
+                k_top_predictions = tf.argsort(predictions)[:, -1, -k:]
+                k_top_probs = tf.sort(predictions)[:, -1, -k:]
 
-            # concatentate the predicted_id to the output which is given to the decoder
-            # as its input.
-            output = tf.concat([output, predicted_id], axis=1)
+                for i in range(k):
+                    if i >= k_top_predictions.shape[1]:
+                        break
 
+                    top_probs = k_top_probs[:, i]
+                    top_preds = tf.expand_dims(k_top_predictions[:, i], 1)
+
+                    new_queue.insert(
+                        0,
+                        (
+                            tf.concat([candidate_batch, top_preds], 1),
+                            probs * -1 * tf.math.log(top_probs)
+                        )
+                    )
+
+            queue = sorted(new_queue, key=lambda tup: np.sum(tup[1]))[-k:]
+
+        output = queue[-1][0]
         return output, attention_weights
 
     def get_gen(data, batch_size):
