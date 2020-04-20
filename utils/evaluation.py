@@ -1,5 +1,4 @@
 from tqdm import tqdm
-import os
 import tensorflow as tf
 import numpy as np
 
@@ -44,9 +43,9 @@ def translate(inputfile, pred_file_path,
         ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
         print('Latest checkpoint restored!!')
 
-    def evaluate(encoder_input, batch_size, k=5):
+    def evaluate(encoder_input, batch_size, k=1):
         batch_size = encoder_input.shape[0]
-        MAX_LENGTH = encoder_input.shape[-1]
+        max_length = encoder_input.shape[-1]
         queue = [
             (
                 np.array([decoder_v2id['<SOS>']]*batch_size).reshape(-1, 1),
@@ -54,49 +53,48 @@ def translate(inputfile, pred_file_path,
             )
         ]
 
-        for i in range(MAX_LENGTH):
+        for i in range(max_length):
             new_queue = []
             while len(queue) > 0:
                 candidate_batch, probs = queue.pop()
-                last_token_batch = tf.expand_dims(candidate_batch[:, -1], 1)
 
                 (
                     enc_padding_mask, combined_mask, dec_padding_mask
                 ) = create_masks(
-                    encoder_input, last_token_batch
+                    encoder_input, candidate_batch
                 )
 
                 # predictions.shape == (batch_size, seq_len, vocab_size)
                 (
                     predictions, attention_weights
                 ) = transformer(encoder_input,
-                                last_token_batch,
+                                candidate_batch,
                                 False,
                                 enc_padding_mask,
                                 combined_mask,
                                 dec_padding_mask)
 
                 # select the last word from the seq_len dimension
-                predictions = tf.nn.softmax(predictions[:, -1:, :], axis=2)  # (batch_size, 1, vocab_size)
-                k_top_predictions = tf.argsort(predictions)[:, -1, -k:]
-                k_top_probs = tf.sort(predictions)[:, -1, -k:]
+                predictions = tf.nn.softmax(predictions, axis=2)  # (batch_size, seq_len, vocab_size)
+                k_top_predictions = tf.argsort(predictions, axis=2)[:, -1, -k:]
+                k_top_probs = tf.sort(predictions, axis=2)[:, -1, -k:]
 
-                for i in range(k):
-                    if i >= k_top_predictions.shape[1]:
+                for j in range(k):
+                    if j >= k_top_predictions.shape[-1]:
                         break
 
-                    top_probs = k_top_probs[:, i]
-                    top_preds = tf.expand_dims(k_top_predictions[:, i], 1)
+                    top_probs = k_top_probs[:, j]
+                    top_preds = tf.expand_dims(k_top_predictions[:, j], 1)
 
                     new_queue.insert(
                         0,
                         (
-                            tf.concat([candidate_batch, top_preds], 1),
+                            tf.concat([candidate_batch, top_preds], axis=1),
                             probs * -1 * tf.math.log(top_probs)
                         )
                     )
 
-            queue = sorted(new_queue, key=lambda tup: np.sum(tup[1]))[-k:]
+            queue = sorted(new_queue, key=lambda tup: np.average(tup[1]))[-k:]
 
         output = queue[-1][0]
         return output, attention_weights
@@ -109,7 +107,7 @@ def translate(inputfile, pred_file_path,
             steps = size//bs
             init = 0
             end = bs
-            for i in range(steps):
+            for _ in range(steps):
                 to_return = ch_data[init:end]
                 init = end
                 end += bs
