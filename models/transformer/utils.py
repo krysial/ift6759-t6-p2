@@ -3,7 +3,7 @@ import numpy as np
 
 
 def get_angles(pos, i, d_model):
-    angle_rates = 1 / np.power(10000, (2 * (i//2)) / np.float32(d_model))
+    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
     return pos * angle_rates
 
 
@@ -53,7 +53,8 @@ def scaled_dot_product_attention(q, k, v, mask):
     Returns:
         output, attention_weights
     """
-    matmul_qk = tf.matmul(q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
+    matmul_qk = tf.matmul(
+        q, k, transpose_b=True)  # (..., seq_len_q, seq_len_k)
 
     # scale matmul_qk
     dk = tf.cast(tf.shape(k)[-1], tf.float32)
@@ -65,7 +66,9 @@ def scaled_dot_product_attention(q, k, v, mask):
 
     # softmax is normalized on the last axis (seq_len_k) so that the scores
     # add up to 1.
-    attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)  # (..., seq_len_q, seq_len_k)
+    attention_weights = tf.nn.softmax(
+        scaled_attention_logits,
+        axis=-1)  # (..., seq_len_q, seq_len_k)
 
     output = tf.matmul(attention_weights, v)  # (..., seq_len_q, depth_v)
 
@@ -83,7 +86,8 @@ def print_out(q, k, v):
 
 def point_wise_feed_forward_network(d_model, dff):
     return tf.keras.Sequential([
-        tf.keras.layers.Dense(dff, activation='relu'),  # (batch_size, seq_len, dff)
+        # (batch_size, seq_len, dff)
+        tf.keras.layers.Dense(dff, activation='relu'),
         tf.keras.layers.Dense(d_model)  # (batch_size, seq_len, d_model)
     ])
 

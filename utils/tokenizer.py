@@ -13,17 +13,24 @@ logger = logging.getLogger(__name__)
 def main():
     parser = argparse.ArgumentParser(
         'script for tokenizing data. It relies on the spacy tokenizer')
-    parser.add_argument('--input', nargs='+', help='input file. Note it can be more than one',
-                        required=True)
-    parser.add_argument('--output', help='path to outputs - will store files here',
-                        required=True)
+    parser.add_argument(
+        '--input',
+        nargs='+',
+        help='input file. Note it can be more than one',
+        required=True)
+    parser.add_argument(
+        '--output',
+        help='path to outputs - will store files here',
+        required=True)
     parser.add_argument('--lang', help='either en or fr', required=True)
     parser.add_argument(
         '--keep-case', help='will not lowercase', action='store_true')
     parser.add_argument('--keep-empty-lines',
                         help='will keep empty lines', action='store_true')
-    parser.add_argument('--newline-to-space', help='converts newlines to spaces',
-                        action='store_true')
+    parser.add_argument(
+        '--newline-to-space',
+        help='converts newlines to spaces',
+        action='store_true')
     parser.add_argument('--skip-lines-with-pattern', nargs='*', default=[],
                         help='skip lines where any of these regex applies')
 
@@ -67,10 +74,14 @@ def main():
             args.newline_to_space, regs)
         done += 1
         logger.info('done ({} / {}) - skipped {} lines (over {} - i.e., {:3.2f}%) because empty,'
-                    ' skipped {} lines (over {} - i.e., {:3.2f}%) because of regex'.format(
-                        done, len(
-                            args.input), empty_skipped, tot_lines, (empty_skipped / tot_lines) * 100,
-                        regex_skipped, tot_lines, (regex_skipped / tot_lines) * 100))
+                    ' skipped {} lines (over {} - i.e., {:3.2f}%) because of regex'.format(done,
+                                                                                           len(args.input),
+                                                                                           empty_skipped,
+                                                                                           tot_lines,
+                                                                                           (empty_skipped / tot_lines) * 100,
+                                                                                           regex_skipped,
+                                                                                           tot_lines,
+                                                                                           (regex_skipped / tot_lines) * 100))
 
 
 def get_stream_size(stream):
@@ -79,7 +90,14 @@ def get_stream_size(stream):
     return result
 
 
-def tokenize(current_file, output, tokenizer, keep_case, keep_empty_lines, newline_to_space, regs):
+def tokenize(
+        current_file,
+        output,
+        tokenizer,
+        keep_case,
+        keep_empty_lines,
+        newline_to_space,
+        regs):
     file_name = ntpath.basename(current_file)
     out_tokenized_path = os.path.join(output, file_name)
     empty_skipped = 0

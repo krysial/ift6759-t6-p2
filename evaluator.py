@@ -32,7 +32,10 @@ def generate_predictions(input_file_path: str, pred_file_path: str):
     )
 
 
-def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: bool):
+def compute_bleu(
+        pred_file_path: str,
+        target_file_path: str,
+        print_all_scores: bool):
     """
 
     Args:
@@ -43,9 +46,17 @@ def compute_bleu(pred_file_path: str, target_file_path: str, print_all_scores: b
     Returns: None
 
     """
-    out = subprocess.run(["sacrebleu", "--input", pred_file_path, target_file_path, '--tokenize',
-                          'none', '--sentence-level', '--score-only'],
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    out = subprocess.run(["sacrebleu",
+                          "--input",
+                          pred_file_path,
+                          target_file_path,
+                          '--tokenize',
+                          'none',
+                          '--sentence-level',
+                          '--score-only'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         universal_newlines=True)
     lines = out.stdout.split('\n')
     if print_all_scores:
         print('\n'.join(lines[:-1]))
@@ -60,12 +71,15 @@ def main():
                         help='path to target (reference) file', required=True)
     parser.add_argument('--input-file-path',
                         help='path to input file', required=True)
-    parser.add_argument('--print-all-scores', help='will print one score per sentence',
-                        action='store_true')
-    parser.add_argument('--do-not-run-model',
-                        help='will use --input-file-path as predictions, instead of running the '
-                             'model on it',
-                        action='store_true')
+    parser.add_argument(
+        '--print-all-scores',
+        help='will print one score per sentence',
+        action='store_true')
+    parser.add_argument(
+        '--do-not-run-model',
+        help='will use --input-file-path as predictions, instead of running the '
+        'model on it',
+        action='store_true')
 
     args = parser.parse_args()
 

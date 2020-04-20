@@ -11,10 +11,23 @@ import json
 import gensim.models
 
 
-def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=True,
-                    add_end=True, remove_punctuation=True, lower=True, threshold=0.5,
-                    CAP=False, NUM=False, ALNUM=False, UPPER=False,
-                    tokenize_type="w", padding='post', post_process_usage=False):
+def preprocess_v2id(
+        data,
+        v2id,
+        fasttext_model=None,
+        max_seq=None,
+        add_start=True,
+        add_end=True,
+        remove_punctuation=True,
+        lower=True,
+        threshold=0.5,
+        CAP=False,
+        NUM=False,
+        ALNUM=False,
+        UPPER=False,
+        tokenize_type="w",
+        padding='post',
+        post_process_usage=False):
     """
     Gets tokenized and integer encoded format of given
     text corpus using given v2id mapping
@@ -32,7 +45,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
         remove_punctuation: boolean, default True.
             If True, removes punctuation symbols.
         lower: boolean, default True. To condition case folding.
-        threshold: float. default is 0.5. 
+        threshold: float. default is 0.5.
             To threshold fasttext similarity indexing.
         CAP: boolean, default False. To condition special token <CAP>
         NUM: boolean, default False. To condition special token <NUM>
@@ -42,7 +55,7 @@ def preprocess_v2id(data, v2id, fasttext_model=None, max_seq=None, add_start=Tru
             Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
             Defines where to pad, begining('pre') or end('post').
-        post_process_usage: boolean, default is False. 
+        post_process_usage: boolean, default is False.
             Defines the usage of this function.
 
     Returns:
@@ -117,7 +130,7 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
         CAP: boolean, default False. To condition special token <CAP>
         NUM: boolean, default False. To condition special token <NUM>
         ALNUM: boolean, default False. To condition special token <ALNUM>
-        UPPER: boolean, default False. To condition special token <UPPER>        
+        UPPER: boolean, default False. To condition special token <UPPER>
         tokenize_type: "w" or "c", default "w".
             Defines token type as word(w) or char(c).
         padding: 'post' or 'pre', default 'post'.
@@ -125,7 +138,7 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
         save_v2id_path: string, default is None.
             Path of saving v2id dictionary mapping.
         fasttext_model: str, default None. Fasttext Model path
-        threshold: float. default is 0.5. 
+        threshold: float. default is 0.5.
             To threshold fasttext similarity indexing.
 
     Returns:
@@ -175,20 +188,35 @@ def preprocessing(data, max_seq=None, vocab_size=None, add_start=True,
     return id2v, v2id, lines
 
 
-def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type='w',
-                   fasttext_model=None, enc_data=None, add_start=True, add_end=True,
-                   remove_punctuation=True, lower=True, enc_v2id=None, Print=False,
-                   CAP=False, NUM=False, ALNUM=False, UPPER=False, threshold=0.5):
+def postprocessing(
+        dec_data,
+        dec_v2id,
+        dec_id2v=None,
+        output=None,
+        tokenize_type='w',
+        fasttext_model=None,
+        enc_data=None,
+        add_start=True,
+        add_end=True,
+        remove_punctuation=True,
+        lower=True,
+        enc_v2id=None,
+        Print=False,
+        CAP=False,
+        NUM=False,
+        ALNUM=False,
+        UPPER=False,
+        threshold=0.5):
     """
-    Decodes given integer token lists to text corpus using given 
+    Decodes given integer token lists to text corpus using given
     v2id or id2v mapping.
 
     Arguments:
-        dec_data: List(list(tokens)) or list(tokens) or np.array(shape=(batch_size,)) 
+        dec_data: List(list(tokens)) or list(tokens) or np.array(shape=(batch_size,))
             Tokens are in int format.
         dec_v2id: string or dict, Mapping of vocabulary to integer encoding.
         dec_id2v: string or dict. defalt None. Mapping of int to vocab encoding
-        output: string or None, default is None. If None, prints the decoded 
+        output: string or None, default is None. If None, prints the decoded
             sentence list. Else saves at given output path.
         token_type: 'w' or 'c', default is 'w'. 'w' represents word tokens & 'c'
             represents char tokens. This is for encoder.
@@ -207,7 +235,7 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
         NUM: boolean, default False. To condition special token <NUM>. For enc.
         ALNUM: boolean, default False. Condition special token <ALNUM>. For enc.
         UPPER: boolean, default False. Condition special token <UPPER>. For enc.
-        threshold: float. default is 0.5. 
+        threshold: float. default is 0.5.
             To threshold fasttext similarity indexing. For encoder.
 
     Returns:
@@ -254,19 +282,19 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
 
         # Get enc_data in format List(list(int)) exactly as input to enc
         _, enc_data_int = preprocess_v2id(data=copy(enc_data),
-                                       v2id=enc_v2id,
-                                       fasttext_model=fasttext_model,
-                                       add_start=add_start,
-                                       add_end=add_end,
-                                       remove_punctuation=remove_punctuation,
-                                       lower=lower,
-                                       threshold=threshold,
-                                       CAP=False,
-                                       NUM=NUM,
-                                       ALNUM=ALNUM,
-                                       UPPER=False,
-                                       tokenize_type=tokenize_type,
-                                       post_process_usage=False)
+                                          v2id=enc_v2id,
+                                          fasttext_model=fasttext_model,
+                                          add_start=add_start,
+                                          add_end=add_end,
+                                          remove_punctuation=remove_punctuation,
+                                          lower=lower,
+                                          threshold=threshold,
+                                          CAP=False,
+                                          NUM=NUM,
+                                          ALNUM=ALNUM,
+                                          UPPER=False,
+                                          tokenize_type=tokenize_type,
+                                          post_process_usage=False)
 
         # Get enc_data in format List(list(words))
         enc_data_words = preprocess_v2id(data=copy(enc_data),
@@ -296,7 +324,8 @@ def postprocessing(dec_data, dec_v2id, dec_id2v=None, output=None, tokenize_type
             dec_data = deal_with_special_token(
                 dec_data, enc_data_int, enc_v2id, enc_data_words, "<ALNUM>")
 
-    # Get tokens as part of sentence from dec_data(List(list(tokens))->list(sentence))
+    # Get tokens as part of sentence from
+    # dec_data(List(list(tokens))->list(sentence))
     dec_data = [" ".join(line) for line in dec_data]
 
     if Print:
@@ -353,7 +382,8 @@ def oversample(data_1, data_2, n):
 # DATA UTILS:
 
 def handle_regex(lines, CAP, NUM, ALNUM, UPPER):
-    # Uses regex to find uppercase, capitalized, numeric, and alphanumeric tokens
+    # Uses regex to find uppercase, capitalized, numeric, and alphanumeric
+    # tokens
     uppercase = re.compile(r'^[À-ÜA-Z]+[À-ÜA-Z]*$')
     capitalized = re.compile(r'^[À-ÜA-Z]')
     numeric = re.compile(r'^[0-9]*$')
@@ -513,7 +543,12 @@ def decode_token_2_words(data, id2v, tokenize_type):
     return data
 
 
-def deal_with_special_token(dec_data, enc_data_int, enc_v2id, enc_data_words, token):
+def deal_with_special_token(
+        dec_data,
+        enc_data_int,
+        enc_v2id,
+        enc_data_words,
+        token):
     token_id = enc_v2id[token]
     MAP = []
     for i, line in enumerate(enc_data_int):
@@ -578,7 +613,7 @@ def remove_cap(dec_data):
         for i, word in enumerate(line):
             if word == cap:
                 try:
-                    line[i+1] = line[i+1][0].upper() + line[i+1][1:]
+                    line[i + 1] = line[i + 1][0].upper() + line[i + 1][1:]
                 except IndexError:
                     pass
             else:
@@ -595,7 +630,7 @@ def remove_upper(dec_data):
         for i, word in enumerate(line):
             if word == UP:
                 try:
-                    line[i+1] = line[i+1].upper()
+                    line[i + 1] = line[i + 1].upper()
                 except IndexError:
                     pass
             else:
