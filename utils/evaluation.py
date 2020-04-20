@@ -1,131 +1,146 @@
-from dataloader.dataloader import get_dataset_eval
-from seq_2_seq_models.builder import get_model
-from utils.data import postprocessing
-
-import os
+from tqdm import tqdm
 import tensorflow as tf
+import numpy as np
+
+from models.transformer.utils import CustomSchedule, create_masks
+from models.transformer import Transformer
+from utils.data import postprocessing, checkout_data
+from utils.dataloader import encoder_preprocess, decoder_preprocess
 
 
-def Model1(input_file, translator_DT, output_file):
-    # Complete Translation Task: w2w sequence model
-    Complete_Translation = seq2seq_block(
-        DT=translator_DT,
-        model_name="Transformer",
-        input_file=input_file,
-        encoder_lang_model_task='unformated_en_w2w',
-        decoder_lang_model_task='formated_fr_w2w',
-        output_file=output_file)
+def translate(inputfile, pred_file_path,
+              num_layers, d_model, num_heads, dff,
+              enc_data="data/aligned_unformated_en",
+              dec_data="data/aligned_formated_fr",
+              dropout_rate=0.3, batch_size=32):
+    _, encoder_v2id, _ = encoder_preprocess(data=enc_data)
+    _, decoder_v2id, _ = decoder_preprocess(data=dec_data)
+    input_vocab_size = len(encoder_v2id) + 1
+    target_vocab_size = len(decoder_v2id) + 1
 
-    return Complete_Translation
-
-
-def Model2(input_file, translator_DT, punctuator_DT, output_file):
-    # Translation Task: w2w sequence model
-    Translation = seq2seq_block(
-        DT=translator_DT,
-        model_name="Transformer",
-        input_file=input_file,
-        encoder_lang_model_task='unformated_en_w2w',
-        decoder_lang_model_task='unformated_fr_w2w',
-        output_file=None)
-
-    # Punctuation Task: c2c sequence model
-    Punctuated_Translation = seq2seq_block(
-        DT=punctuator_DT,
-        model_name="GRU",
-        input_file=Translation,
-        encoder_lang_model_task='unformated_fr_c2c',
-        decoder_lang_model_task='formated_fr_c2c',
-        output_file=output_file)
-
-    return Punctuation_Translation
-
-
-def seq2seq_block(DT, model_name, encoder_lang_model_task,
-                  input_file, decoder_lang_model_task, output_file
-):
-
-    (
-        lang_model_opts,
-        seq_model_opts,
-        train_opts,
-        dataset,
-        encoder_v2id
-    ) = get_dataset_eval(
-        DT, model_name,
-        input_file,
-        encoder_lang_model_task,
-        decoder_lang_model_task
+    learning_rate = CustomSchedule(d_model)
+    optimizer = tf.keras.optimizers.Adam(
+        learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9
     )
 
-    model = get_model(
-        model_name,
-        train_opts=train_opts,
-        seq_model_opts=seq_model_opts,
-        encoder_lang_config=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ],
-        decoder_lang_config=lang_model_opts[
-            train_opts['decoder_lang_model_task']
-        ]
-    )
+    transformer = Transformer(num_layers, d_model, num_heads, dff,
+                              input_vocab_size, target_vocab_size,
+                              pe_input=input_vocab_size,
+                              pe_target=target_vocab_size,
+                              rate=dropout_rate)
 
-    # Directory where the checkpoints will be loaded from
-    checkpoint_dir = os.path.join(
-        'seq_2_seq_models',
-        train_opts['encoder_lang_model_task'][:-4] + "_2_" +
-        train_opts['decoder_lang_model_task'][:-4] + "_" +
-        train_opts['encoder_lang_model_task'][-1] + "2" +
-        train_opts['decoder_lang_model_task'][-1],
-        train_opts['model_name'], DT
-    )
+    checkpoint_path = "./checkpoints/train/w2w/unformated_en_2_formated_fr"
 
-    ckpt = tf.train.Checkpoint(
-        model=model, optimizer=model.optimizer)
+    ckpt = tf.train.Checkpoint(transformer=transformer,
+                               optimizer=optimizer)
 
     ckpt_manager = tf.train.CheckpointManager(
-        ckpt, checkpoint_dir, max_to_keep=5)
+        ckpt, checkpoint_path, max_to_keep=50
+    )
 
     # if a checkpoint exists, restore the latest checkpoint.
     if ckpt_manager.latest_checkpoint:
-        ckpt.restore(ckpt_manager.latest_checkpoint)
+        ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
+        print('Latest checkpoint restored!!')
 
-    predictions = tf.argmax(model.predict(dataset, verbose=1), axis=-1)
+    def evaluate(encoder_input, batch_size, k=2):
+        batch_size = encoder_input.shape[0]
+        max_length = encoder_input.shape[-1]
+        queue = [
+            (
+                np.array([decoder_v2id['<SOS>']] * batch_size).reshape(-1, 1),
+                np.ones((batch_size, 1))
+            )
+        ]
 
-    processed_predicitons = postprocessing(
-        dec_data=predictions,
-        dec_v2id=seq_model_opts['decoder_v2id'],
-        Print=True,
-        output=output_file,
-        tokenize_type=lang_model_opts[
-            train_opts['decoder_lang_model_task']
-        ]['tokenize_type'],
-        fasttext_model=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['fasttext_model'],
-        enc_data=input_file,
-        threshold=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['threshold'],
-        remove_punctuation=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['remove_punctuation'],
-        lower=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['lower'],
-        CAP=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['CAP'],
-        NUM=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['NUM'],
-        ALNUM=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['ALNUM'],
-        UPPER=lang_model_opts[
-            train_opts['encoder_lang_model_task']
-        ]['UPPER'],
-        enc_v2id=encoder_v2id
+        for _ in range(max_length):
+            new_queue = []
+            while len(queue) > 0:
+                candidate_batch, probs = queue.pop()
+
+                (
+                    enc_padding_mask, combined_mask, dec_padding_mask
+                ) = create_masks(
+                    encoder_input, candidate_batch
+                )
+
+                # predictions.shape == (batch_size, seq_len, vocab_size)
+                (
+                    predictions, attention_weights
+                ) = transformer(encoder_input,
+                                candidate_batch,
+                                False,
+                                enc_padding_mask,
+                                combined_mask,
+                                dec_padding_mask)
+
+                # select the last word from the seq_len dimension
+                # (batch_size, seq_len, vocab_size)
+                predictions = tf.nn.softmax(predictions, axis=2)
+                k_top_predictions = tf.argsort(predictions, axis=2)[:, -1, -k:]
+                k_top_probs = tf.sort(predictions, axis=2)[:, -1, -k:]
+
+                for j in range(k):
+                    if j >= k_top_predictions.shape[-1]:
+                        break
+
+                    top_probs = k_top_probs[:, j]
+                    top_preds = tf.expand_dims(k_top_predictions[:, j], 1)
+
+                    new_queue.insert(
+                        0,
+                        (
+                            tf.concat([candidate_batch, top_preds], axis=1),
+                            probs * -1 * tf.math.log(top_probs)
+                        )
+                    )
+
+            queue = sorted(new_queue, key=lambda tup: np.sum(tup[1]))[:k]
+
+        output = queue[-1][0]
+        return output, attention_weights
+
+    def get_gen(data, batch_size):
+        def data_word_generator():
+            ch_data = checkout_data(data)
+            size = len(ch_data)
+            bs = min(size, batch_size)
+            steps = size // bs
+            init = 0
+            end = bs
+            for _ in range(steps):
+                to_return = ch_data[init:end]
+                init = end
+                end += bs
+                yield to_return
+        return data_word_generator()
+
+    enc_gen = get_gen(
+        data=inputfile,
+        batch_size=batch_size
     )
 
-    return processed_predicitons
+    print(pred_file_path)
+
+    f = open(pred_file_path, "w")
+    for enc_data_words in tqdm(enc_gen):
+        enc_data_int, _, _ = encoder_preprocess(data=enc_data_words)
+        out, _ = evaluate(enc_data_int, batch_size)
+        out_words = postprocessing(
+            dec_data=out,
+            dec_v2id=decoder_v2id,
+            Print=False,
+            tokenize_type="w",
+            fasttext_model="embeddings/unformated_en_w2w/%d/unaligned_unformated_en" %
+            (d_model),
+            enc_data=enc_data_words,
+            remove_punctuation=True,
+            lower=False,
+            CAP=True,
+            NUM=True,
+            ALNUM=True,
+            UPPER=True,
+            enc_v2id=encoder_v2id)
+
+        print('\n'.join(out_words), file=f)
+    f.close()
