@@ -43,7 +43,7 @@ def translate(inputfile, pred_file_path,
         ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
         print('Latest checkpoint restored!!')
 
-    def evaluate(encoder_input, batch_size, k=1):
+    def evaluate(encoder_input, batch_size, k=2):
         batch_size = encoder_input.shape[0]
         max_length = encoder_input.shape[-1]
         queue = [
