@@ -43,7 +43,7 @@ def translate(inputfile, pred_file_path,
         ckpt.restore(ckpt_manager.latest_checkpoint).expect_partial()
         print('Latest checkpoint restored!!')
 
-    def evaluate(encoder_input, batch_size, k=1):
+    def evaluate(encoder_input, batch_size, k=5):
         batch_size = encoder_input.shape[0]
         max_length = encoder_input.shape[-1]
         queue = [
@@ -94,7 +94,7 @@ def translate(inputfile, pred_file_path,
                         )
                     )
 
-            queue = sorted(new_queue, key=lambda tup: np.average(tup[1]))[-k:]
+            queue = sorted(new_queue, key=lambda tup: np.sum(tup[1]))[:k]
 
         output = queue[-1][0]
         return output, attention_weights
