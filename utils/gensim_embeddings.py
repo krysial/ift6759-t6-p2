@@ -6,15 +6,18 @@ from utils.data import preprocessing
 
 
 # Iterator that yields sentences given a text file
-# Adapted from: https://radimrehurek.com/gensim/auto_examples/tutorials/run_word2vec.html
+# Adapted from:
+# https://radimrehurek.com/gensim/auto_examples/tutorials/run_word2vec.html
 class MyCorpus(object):
     """An iterator that yields sentences (lists of str)."""
+
     def __init__(self, data_path):
         self.data_path = data_path
 
     def __iter__(self):
         for line in open(self.data_path):
-            # assume there's one document per line, tokens separated by whitespace
+            # assume there's one document per line, tokens separated by
+            # whitespace
             yield utils.simple_preprocess(line)
 
 
@@ -34,9 +37,9 @@ def create_matrix(id2v, wv, oov=None):
     Arguments:
         id2v: dictionary. Id-to-vocabulary dictionary created by processing.py.
         wv: KeyedVectors object. Word embeddings from a gensim model.
-        oov: function. Takes no input and outputs a vector of length (embedding_size). 
+        oov: function. Takes no input and outputs a vector of length (embedding_size).
             Handles out-of-vocabulary (OOV) tokens. If None, OOV embeddings are zero vectors.
-    
+
     Returns:
         A NumPy array of shape (vocabulary_size, embedding_size).
     """
@@ -53,7 +56,7 @@ def create_matrix(id2v, wv, oov=None):
         try:
             # Get token embedding if possible
             emb_mat[idx] = wv[word]
-        except:
+        except BaseException:
             # If token is OOV, use OOV function
             if oov is not None:
                 emb_mat[idx] = oov()
@@ -64,7 +67,12 @@ def create_matrix(id2v, wv, oov=None):
     return emb_mat
 
 
-def load_and_create(model_path, data, oov=None, algorithm=gensim.models.FastText, **kwargs):
+def load_and_create(
+        model_path,
+        data,
+        oov=None,
+        algorithm=gensim.models.FastText,
+        **kwargs):
     """
     Loads a model from disk and creates an embedding matrix from the given data.
 
@@ -75,11 +83,11 @@ def load_and_create(model_path, data, oov=None, algorithm=gensim.models.FastText
             Handles out-of-vocabulary (OOV) tokens. If None, OOV embeddings are zero vectors.
         algorithm: gensim model used, e.g. Word2Vec or FastText.
         **kwargs: keyword arguments passed to the preprocessing function.
-    
+
     Returns:
         A NumPy array of shape (vocabulary_size, embedding_size).
     """
-    
+
     model = algorithm.load(model_path)
     if isinstance(data, str):
         data, _, _ = preprocessing(data, **kwargs)
@@ -91,11 +99,20 @@ if __name__ == '__main__':
     # Set embedding size
     emb_size = 8
     # Create function to handle out-of-vocabulary tokens
-    oov = lambda:np.random.normal(0, 1, emb_size)
+    def oov(): return np.random.normal(0, 1, emb_size)
     # Create model from text file
-    model = create_model(gensim.models.Word2Vec, 'data/train.lang1', size=emb_size)
+    model = create_model(
+        gensim.models.Word2Vec,
+        'data/train.lang1',
+        size=emb_size)
     # Get id-to-vector dictionary
-    id2v = {0:'the', 1:'be', 2:'to', 3:'of', 4:'and', 5:'out-of-vocabulary-token'}
+    id2v = {
+        0: 'the',
+        1: 'be',
+        2: 'to',
+        3: 'of',
+        4: 'and',
+        5: 'out-of-vocabulary-token'}
     # Create embedding matrix
     emb_mat = create_matrix(id2v, model.wv, oov)
 

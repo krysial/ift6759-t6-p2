@@ -16,8 +16,10 @@ def main():
         'script to remove punctuation. Data must be already tokenized.')
     parser.add_argument('--input', nargs='+',
                         help='input file. Note it can be more than one')
-    parser.add_argument('--output', help='path to outputs - will store files here',
-                        required=True)
+    parser.add_argument(
+        '--output',
+        help='path to outputs - will store files here',
+        required=True)
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
@@ -29,8 +31,9 @@ def main():
         logger.info('tokenizing file {}'.format(current_file))
         tot_lines, removed_punctuations = remove_punctuation(
             current_file, args.output)
-        logger.info('done - parsed {} lines and removed {} (punctuation) symbols'.format(
-            tot_lines, removed_punctuations))
+        logger.info(
+            'done - parsed {} lines and removed {} (punctuation) symbols'.format(
+                tot_lines, removed_punctuations))
 
 
 def remove_punctuation(current_file, output):
