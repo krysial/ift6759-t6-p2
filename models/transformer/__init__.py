@@ -1,3 +1,6 @@
+# Code is adapted from:
+# https://www.tensorflow.org/tutorials/text/transformer#evaluate
+
 import tensorflow as tf
 from models.transformer.encoder import Encoder
 from models.transformer.decoder import Decoder
